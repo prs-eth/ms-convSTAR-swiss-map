@@ -28,6 +28,8 @@ def parse_args():
     parser.add_argument('-lrs', "--lrSC", default=2, type=int, help="lrScheduler")
     parser.add_argument('-nm', "--name", default='msConvSTAR', type=str, help="name")
     parser.add_argument('-l1', "--lambda_1", default=0.1, type=float, help="lambda_1")
+    # TODO lambda2 0.5? It is 0.1, 0.3, 0.6 in the paper
+    # TODO look into the training flow agin following the data structure to see if it is consistent with the paper
     parser.add_argument('-l2', "--lambda_2", default=0.5, type=float, help="lambda_2")
     parser.add_argument('-dr', "--dropout", default=0.5, type=float, help="dropout of CNN")
     parser.add_argument('-stg', "--stage", default=3, type=float, help="num stage")
@@ -191,6 +193,7 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
 
         output_glob, output_local_1, output_local_2 = network.forward(input)
 
+        # NOTE no mask is passed and no loss is masked. the masking is supposed to be done before the training
         l_glob = loss(output_glob, target_glob)
         l_local_1 = loss_local_1(output_local_1, target_local_1)
         l_local_2 = loss_local_2(output_local_2, target_local_2)

@@ -23,6 +23,7 @@ class Dataset(torch.utils.data.Dataset):
         self.cloud_threshold = cloud_threshold
         self.return_cloud_cover = return_cloud_cover
 
+        # TODO replace the split/valid_list here with the pre-split data
         #Get train/test split
         if small_train_set_mode:
             print('Small training-set mode - fold: ', fold, '  Mode: ', mode)
@@ -34,14 +35,17 @@ class Dataset(torch.utils.data.Dataset):
             self.valid_list = self.split(mode)
         
         self.valid_samples = self.valid_list.shape[0]
-
+        
+        # NOTE hard coding 142 as the original number of max_obs as appeared in data. Meanings of self.max_obs 142 -> 71
+        # TODO remove the time_downsample as the time series has been pre-selected
         self.time_downsample_factor = time_downsample_factor
         self.max_obs = int(142/self.time_downsample_factor)
 
         gt_path_ = './utils/' + gt_path        
         if not os.path.exists(gt_path_):
             gt_path_ = './'  + gt_path        
-            
+        
+        # TODO TODO run though the code here to learn how the mapping works clearly.
         file=open(gt_path_, "r")
         tier_1 = []
         tier_2 = []
@@ -53,7 +57,8 @@ class Dataset(torch.utils.data.Dataset):
             tier_2.append(line[-4])
             tier_3.append(line[-3])
             tier_4.append(line[-2])
-    
+        
+        # NOTE tier_1[0] is "1th_tier"
         tier_2[0] = '0_unknown'
         tier_3[0] = '0_unknown'
         tier_4[0] = '0_unknown'
@@ -71,13 +76,14 @@ class Dataset(torch.utils.data.Dataset):
                 tier_4[i] = '0_unknown'
             
                             
-        tier_2_elements = list(set(tier_2))
-        tier_3_elements = list(set(tier_3))
-        tier_4_elements = list(set(tier_4))
+        tier_2_elements = list(set(tier_2)) # len of list 6
+        tier_3_elements = list(set(tier_3)) # 20
+        tier_4_elements = list(set(tier_4)) # 52
         tier_2_elements.sort()
         tier_3_elements.sort()
         tier_4_elements.sort()
-            
+        
+        # NOTE tier_2_ is the list of indices of correspoinding elements in tier_2_ele for each entry in tier_2 
         tier_2_ = []
         tier_3_ = []
         tier_4_ = []
@@ -101,9 +107,10 @@ class Dataset(torch.utils.data.Dataset):
             self.label_list_local_2_name.append(tier_3[int(gt)])
             self.label_list_glob_name.append(tier_4[int(gt)])
 
-        self.n_classes = max(self.label_list_glob) + 1
-        self.n_classes_local_1 = max(self.label_list_local_1) + 1
-        self.n_classes_local_2 = max(self.label_list_local_2) + 1
+        # NOTE the actual n_classes contained in self.label_list is only 48, 52 is the number of original all classes
+        self.n_classes = max(self.label_list_glob) + 1 #52
+        self.n_classes_local_1 = max(self.label_list_local_1) + 1 #6
+        self.n_classes_local_2 = max(self.label_list_local_2) + 1 #20
 
         print('Dataset size: ', self.samples)
         print('Valid dataset size: ', self.valid_samples)
@@ -118,6 +125,7 @@ class Dataset(torch.utils.data.Dataset):
         self.l2_2_g = np.zeros(self.n_classes)
         self.l1_2_l2 = np.zeros(self.n_classes_local_2)
         
+        # NOTE l1_2_g l1 to glob correponding elements in label_list_local
         for i in range(1,self.n_classes):
             if i in self.label_list_glob:
                 self.l1_2_g[i] = self.label_list_local_1[self.label_list_glob.index(i)]
@@ -138,18 +146,21 @@ class Dataset(torch.utils.data.Dataset):
         if self.apply_cloud_masking or self.return_cloud_cover:
             CC = self.data["cloud_cover"][idx]
 
+        # NOTE target is a 2d array (reduce the third dimension)
         target_ = self.data["gt"][idx,...,0]
         if self.eval_mode:
             gt_instance = self.data["gt_instance"][idx,...,0]
 
         X = np.transpose(X, (0, 3, 1, 2))
 
+        # NOTE make sure that the first 4 channels are exactly those used in the paper
         # Temporal downsampling
         X = X[0::self.time_downsample_factor,:self.num_channel,...]
 
         if self.apply_cloud_masking or self.return_cloud_cover:
             CC = CC[0::self.time_downsample_factor,...]
 
+        # NOTE get 24*24 gt map at three hierarchical levels, note that target gt is child class of tier_4 glob
         #Change labels 
         target = np.zeros_like(target_)
         target_local_1 = np.zeros_like(target_)
@@ -214,9 +225,11 @@ class Dataset(torch.utils.data.Dataset):
         valid = np.ones(self.samples)
         w,h = self.data["gt"][0,...,0].shape
         for i in range(self.samples):
+            # NOTE if proportion of pixels in 24*24 patch is less than t, then this sample is marked as 0
+            # TODO meaning of gt label 0? and verify if self.t 0 is same as paper
             if np.sum( self.data["gt"][i,...,0] != 0 )/(w*h) < self.t:
                 valid[i] = 0
-        
+        # NOTE return the indices of samples marked as 1 in valid (binary array)
         return np.nonzero(valid)[0]
         
     def split(self, mode):
