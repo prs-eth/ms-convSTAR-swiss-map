@@ -13,7 +13,7 @@ def test(model, model_gt, dataloader, level=3):
     targets_list = list()
     gt_instance_list = list()
     logprobabilities_refined = list()
-
+    # NOTE get the corresponding target gt of given level
     for iteration, data in tqdm(enumerate(dataloader)):
         if level==1:
             inputs, _, targets, _, gt_instance = data
@@ -126,14 +126,16 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=Fal
     targets = targets.flatten()
     gt_instance = gt_instance.flatten()
     predictions_refined = predictions_refined.flatten()
-
+    # TODO address the cuda issue and rerun this part to check dimension of array here.
+    # TODO how to filter the unknown. Modify according to current hierarchy mapping.
+    # TODO this function is not used for reconstructing map (do not require GT/target)?
     # Ignore unknown class class_id=0
     if viz:
         valid_crop_samples = targets != 9999999999
     elif level == 2 and ignore_undefined_classes:
         valid_crop_samples = (targets != 0) * (targets != 7) * (targets != 9) * (targets != 12)
     elif level == 2:
-
+        # TODO the meaning of 7,9,12 here? 
         targets[(targets == 7)] = 12
         targets[(targets == 9)] = 12
         predictions[(predictions == 7)] = 12

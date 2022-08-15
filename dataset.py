@@ -32,14 +32,14 @@ class Dataset(torch.utils.data.Dataset):
             print('5fold: ', fold, '  Mode: ', mode)
             self.valid_list = self.split_5fold(mode, self.fold) 
         else:
-            self.valid_list = self.split(mode)
-        
+            self.valid_list = self.split(mode) 
+        # NOTE self.valid_list 1-dimension array of indices of selected patches for train or for test
         self.valid_samples = self.valid_list.shape[0]
         
         # NOTE hard coding 142 as the original number of max_obs as appeared in data. Meanings of self.max_obs 142 -> 71
         # TODO remove the time_downsample as the time series has been pre-selected
         self.time_downsample_factor = time_downsample_factor
-        self.max_obs = int(142/self.time_downsample_factor)
+        self.max_obs = int(142/self.time_downsample_factor) #71
 
         gt_path_ = './utils/' + gt_path        
         if not os.path.exists(gt_path_):
@@ -53,10 +53,10 @@ class Dataset(torch.utils.data.Dataset):
         tier_4 = []
         reader = csv.reader(file)
         for line in reader:
-            tier_1.append(line[-5])
-            tier_2.append(line[-4])
-            tier_3.append(line[-3])
-            tier_4.append(line[-2])
+            tier_1.append(line[-5]) #'1st_tier'
+            tier_2.append(line[-4]) #'2nd_tier'
+            tier_3.append(line[-3]) #'3rd_tier'
+            tier_4.append(line[-2]) #'4th_tier_ENG'
         
         # NOTE tier_1[0] is "1th_tier"
         tier_2[0] = '0_unknown'
@@ -66,7 +66,7 @@ class Dataset(torch.utils.data.Dataset):
         self.label_list = []
         for i in range(len(tier_2)):
             if tier_1[i] == 'Vegetation' and tier_4[i] != '':
-                self.label_list.append(i)
+                self.label_list.append(i) # id in the label_list is same as column 'GT' in labels.csv. Or 'GT' column can be used here for selecting label_list
                 
             if tier_2[i] == '':
                 tier_2[i] = '0_unknown'
@@ -75,7 +75,7 @@ class Dataset(torch.utils.data.Dataset):
             if tier_4[i] == '':
                 tier_4[i] = '0_unknown'
             
-                            
+        # NOTE tier_2: original columns of label.csv, with no-data filled as '0_unknown'   
         tier_2_elements = list(set(tier_2)) # len of list 6
         tier_3_elements = list(set(tier_3)) # 20
         tier_4_elements = list(set(tier_4)) # 52
@@ -83,7 +83,7 @@ class Dataset(torch.utils.data.Dataset):
         tier_3_elements.sort()
         tier_4_elements.sort()
         
-        # NOTE tier_2_ is the list of indices of correspoinding elements in tier_2_ele for each entry in tier_2 
+        # NOTE tier_2_ map of tier_2 from string to numerical index of the classes of this column in the csv file
         tier_2_ = []
         tier_3_ = []
         tier_4_ = []
@@ -98,7 +98,7 @@ class Dataset(torch.utils.data.Dataset):
         self.label_list_local_1_name = []
         self.label_list_local_2_name = []
         self.label_list_glob_name = []
-        for gt in self.label_list:
+        for gt in self.label_list: # gt are only ids of rows that have tier_1 as 'vegetation' and tier 4 not none
             self.label_list_local_1.append(tier_2_[int(gt)])
             self.label_list_local_2.append(tier_3_[int(gt)])
             self.label_list_glob.append(tier_4_[int(gt)])
@@ -106,8 +106,8 @@ class Dataset(torch.utils.data.Dataset):
             self.label_list_local_1_name.append(tier_2[int(gt)])
             self.label_list_local_2_name.append(tier_3[int(gt)])
             self.label_list_glob_name.append(tier_4[int(gt)])
-
-        # NOTE the actual n_classes contained in self.label_list is only 48, 52 is the number of original all classes
+        # NOTE this way the classes does not belong to 'Vegetation' in hier3 will still be included and predicted in the output channel
+        # NOTE +1 represents the 'unknown' class. the actual n_classes contained in self.label_list is only 48, 52 is the number of original all classes
         self.n_classes = max(self.label_list_glob) + 1 #52
         self.n_classes_local_1 = max(self.label_list_local_1) + 1 #6
         self.n_classes_local_2 = max(self.label_list_local_2) + 1 #20
@@ -125,12 +125,12 @@ class Dataset(torch.utils.data.Dataset):
         self.l2_2_g = np.zeros(self.n_classes)
         self.l1_2_l2 = np.zeros(self.n_classes_local_2)
         
-        # NOTE l1_2_g l1 to glob correponding elements in label_list_local
+        # NOTE label_list_glob (or label_list_l3) is the mapping of label_list (selected elements of column 'GT') to hier4 labels
         for i in range(1,self.n_classes):
             if i in self.label_list_glob:
                 self.l1_2_g[i] = self.label_list_local_1[self.label_list_glob.index(i)]
                 self.l2_2_g[i] = self.label_list_local_2[self.label_list_glob.index(i)]
-        
+        # NOTE if the class is not in label_list, then the corresponding l1 mapping here is 0 (parent class 'unknown')
         for i in range(1,self.n_classes_local_2):
             if i in self.label_list_local_2:
                 self.l1_2_l2[i] = self.label_list_local_1[self.label_list_local_2.index(i)]
@@ -139,33 +139,33 @@ class Dataset(torch.utils.data.Dataset):
         return self.valid_samples
 
     def __getitem__(self, idx):
-                     
+        # TODO when creating dataset for 'test', lines under eval_mode also needs to be checked  
         idx = self.valid_list[idx]
         X = self.data["data"][idx]
 
         if self.apply_cloud_masking or self.return_cloud_cover:
             CC = self.data["cloud_cover"][idx]
 
-        # NOTE target is a 2d array (reduce the third dimension)
+        # TODO additionally map of the target_ from CODE to GT column (or direcly change the mapping when init the dataset)
         target_ = self.data["gt"][idx,...,0]
-        if self.eval_mode:
+        if self.eval_mode: # TODO return not only gt_instance, but also gt_canton if needed. Also observe how gt_instance is used in evaluation
             gt_instance = self.data["gt_instance"][idx,...,0]
 
         X = np.transpose(X, (0, 3, 1, 2))
 
-        # NOTE make sure that the first 4 channels are exactly those used in the paper
+        # TODO remove the downsample and channel selection
         # Temporal downsampling
         X = X[0::self.time_downsample_factor,:self.num_channel,...]
 
         if self.apply_cloud_masking or self.return_cloud_cover:
             CC = CC[0::self.time_downsample_factor,...]
 
-        # NOTE get 24*24 gt map at three hierarchical levels, note that target gt is child class of tier_4 glob
+        # NOTE TODO verify: here self.label_list represents elements from the GT column. this can be modified by selecting elements from the CODE column
         #Change labels 
         target = np.zeros_like(target_)
         target_local_1 = np.zeros_like(target_)
         target_local_2 = np.zeros_like(target_)
-        for i in range(len(self.label_list)):
+        for i in range(len(self.label_list)): # NOTE here only the classes in label_list (Vegetation and hier4 is not none) get mapped. Other classes in target_ including no-data value 9999999 are not mapped (corresponding value in target is 0)
             target[target_ == self.label_list[i]] = self.label_list_glob[i]
             target_local_1[target_ == self.label_list[i]] = self.label_list_local_1[i]
             target_local_2[target_ == self.label_list[i]] = self.label_list_local_2[i]
@@ -274,6 +274,7 @@ class Dataset(torch.utils.data.Dataset):
             valid[test_s:test_f] = 0.
 
         w,h = self.data["gt"][0,...,0].shape
+        # NOTE as self.t is set as 0, this function is actually not used. However, it can be used to further filter out some patches.
         for i in range(self.samples):
             if np.sum( self.data["gt"][i,...,0] != 0 )/(w*h) < self.t:
                 valid[i] = 0

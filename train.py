@@ -73,7 +73,7 @@ def main(
 
     traindataset = Dataset(datadir, 0., 'train', False, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm)
     testdataset = Dataset(datadir, 0., 'test', True, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm)
-
+    
     nclasses = traindataset.n_classes
     nclasses_local_1 = traindataset.n_classes_local_1
     nclasses_local_2 = traindataset.n_classes_local_2
@@ -85,7 +85,7 @@ def main(
     LOSS_WEIGHT_LOCAL_2 = torch.ones(nclasses_local_2)
     LOSS_WEIGHT_LOCAL_2[0] = 0
 
-    # Class stage mappping
+    # Class stage mappping. 3 stages to use
     s1_2_s3 = traindataset.l1_2_g
     s2_2_s3 = traindataset.l2_2_g
 
@@ -113,7 +113,7 @@ def main(
 
     optimizer = torch.optim.Adam(list(network.parameters()) + list(network_gt.parameters()), lr=lr,
                                  weight_decay=weight_decay)
-
+    
     loss = torch.nn.CrossEntropyLoss(weight=LOSS_WEIGHT)
     loss_local_1 = torch.nn.CrossEntropyLoss(weight=LOSS_WEIGHT_LOCAL_1)
     loss_local_2 = torch.nn.CrossEntropyLoss(weight=LOSS_WEIGHT_LOCAL_2)
@@ -156,7 +156,7 @@ def main(
 
         # evaluate model
         if epoch > 1 and epoch % 1 == 0:
-            print("\n Eval on test set")
+            print("\n Eval on test set") # NOTE default level is 3 for evaluate_fieldwise.
             test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize)
 
             if checkpoint_dir is not None:
@@ -179,7 +179,7 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
     mean_loss_local_1 = 0.
     mean_loss_local_2 = 0.
     mean_loss_gt = 0.
-
+    
     for iteration, data in enumerate(dataloader):
         optimizer.zero_grad()
 
@@ -213,7 +213,7 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
         output_glob_R = network_gt([output_local_1, output_local_2, output_glob])
         l_gt = loss(output_glob_R, target_glob)
         mean_loss_gt += l_gt.data.cpu().numpy()
-
+        # TODO the losses terms can be plot in wandb during training
         total_loss = total_loss + l_gt
         total_loss.backward()
         torch.nn.utils.clip_grad_norm_(network.parameters(), grad_clip)
