@@ -1,14 +1,15 @@
+import json
 import torch.utils.data
 import os, glob
 import torch
 import numpy as np
 import h5py
 import csv
-
+# NOTE the class Dataset has been adapted for the hdf5 file and label.csv of 2021 data. So it cannot be applied direcly for the ZueriCrop dataset.
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, path, t=0.9, mode='all', eval_mode=False, fold=None, gt_path='labelsC.csv',
                  time_downsample_factor=2, num_channel=4, apply_cloud_masking=False, cloud_threshold=0.1,
-                 return_cloud_cover=False, small_train_set_mode=False):
+                 return_cloud_cover=False, small_train_set_mode=False, data_canton_labels_dir=None, canton_ids_train=None):
         
         self.data = h5py.File(path, "r", libver='latest', swmr=True)
         self.samples = self.data["data"].shape[0]
@@ -22,24 +23,27 @@ class Dataset(torch.utils.data.Dataset):
         self.apply_cloud_masking = apply_cloud_masking
         self.cloud_threshold = cloud_threshold
         self.return_cloud_cover = return_cloud_cover
+        self.data_canton_labels = json.load(open(data_canton_labels_dir))
+        self.canton_ids_train = canton_ids_train
 
         # TODO replace the split/valid_list here with the pre-split data
         #Get train/test split
-        if small_train_set_mode:
-            print('Small training-set mode - fold: ', fold, '  Mode: ', mode)
-            self.valid_list = self.split_train_test_23(mode, self.fold)
-        elif self.fold != None:
-            print('5fold: ', fold, '  Mode: ', mode)
-            self.valid_list = self.split_5fold(mode, self.fold) 
-        else:
-            self.valid_list = self.split(mode) 
+        # if small_train_set_mode:
+        #     print('Small training-set mode - fold: ', fold, '  Mode: ', mode)
+        #     self.valid_list = self.split_train_test_23(mode, self.fold)
+        # elif self.fold != None:
+        #     print('5fold: ', fold, '  Mode: ', mode)
+        #     self.valid_list = self.split_5fold(mode, self.fold) 
+        # else:
+        #     self.valid_list = self.split(mode) 
+        self.valid_list = self.get_valid_list(mode)
         # NOTE self.valid_list 1-dimension array of indices of selected patches for train or for test
         self.valid_samples = self.valid_list.shape[0]
         
         # NOTE hard coding 142 as the original number of max_obs as appeared in data. Meanings of self.max_obs 142 -> 71
         # TODO remove the time_downsample as the time series has been pre-selected
-        self.time_downsample_factor = time_downsample_factor
-        self.max_obs = int(142/self.time_downsample_factor) #71
+        # self.time_downsample_factor = time_downsample_factor
+        # self.max_obs = int(142/self.time_downsample_factor) #71
 
         gt_path_ = './utils/' + gt_path        
         if not os.path.exists(gt_path_):
@@ -51,23 +55,26 @@ class Dataset(torch.utils.data.Dataset):
         tier_2 = []
         tier_3 = []
         tier_4 = []
+        tier_code = []
         reader = csv.reader(file)
         for line in reader:
             tier_1.append(line[-5]) #'1st_tier'
             tier_2.append(line[-4]) #'2nd_tier'
             tier_3.append(line[-3]) #'3rd_tier'
             tier_4.append(line[-2]) #'4th_tier_ENG'
+            tier_code.append(line[1])
         
         # NOTE tier_1[0] is "1th_tier"
         tier_2[0] = '0_unknown'
         tier_3[0] = '0_unknown'
         tier_4[0] = '0_unknown'
     
-        self.label_list = []
+        self.label_list = {}
         for i in range(len(tier_2)):
             if tier_1[i] == 'Vegetation' and tier_4[i] != '':
-                self.label_list.append(i) # id in the label_list is same as column 'GT' in labels.csv. Or 'GT' column can be used here for selecting label_list
-                
+                # self.label_list.append(i) # id in the label_list is same as column 'GT' in labels.csv. Or 'GT' column can be used here for selecting label_list
+                self.label_list[i] = tier_code[i]
+
             if tier_2[i] == '':
                 tier_2[i] = '0_unknown'
             if tier_3[i] == '':
@@ -98,7 +105,7 @@ class Dataset(torch.utils.data.Dataset):
         self.label_list_local_1_name = []
         self.label_list_local_2_name = []
         self.label_list_glob_name = []
-        for gt in self.label_list: # gt are only ids of rows that have tier_1 as 'vegetation' and tier 4 not none
+        for gt in self.label_list.keys(): # gt are only ids of rows that have tier_1 as 'vegetation' and tier 4 not none
             self.label_list_local_1.append(tier_2_[int(gt)])
             self.label_list_local_2.append(tier_3_[int(gt)])
             self.label_list_glob.append(tier_4_[int(gt)])
@@ -139,6 +146,7 @@ class Dataset(torch.utils.data.Dataset):
         return self.valid_samples
 
     def __getitem__(self, idx):
+        # TODO TODO the following lines need to be modified for the current hdf5 file
         # TODO when creating dataset for 'test', lines under eval_mode also needs to be checked  
         idx = self.valid_list[idx]
         X = self.data["data"][idx]
@@ -146,29 +154,32 @@ class Dataset(torch.utils.data.Dataset):
         if self.apply_cloud_masking or self.return_cloud_cover:
             CC = self.data["cloud_cover"][idx]
 
-        # TODO additionally map of the target_ from CODE to GT column (or direcly change the mapping when init the dataset)
         target_ = self.data["gt"][idx,...,0]
-        if self.eval_mode: # TODO return not only gt_instance, but also gt_canton if needed. Also observe how gt_instance is used in evaluation
+        if self.eval_mode: # TODO it seems that for evaluation, we do not need to return 'gt_canton'
             gt_instance = self.data["gt_instance"][idx,...,0]
 
         X = np.transpose(X, (0, 3, 1, 2))
 
-        # TODO remove the downsample and channel selection
+        # TODO remove the downsample and channel selection. Change from (71, 4, 24, 24) to (36, 4, 24, 24). Whether the number of input channels need to be modified.
         # Temporal downsampling
-        X = X[0::self.time_downsample_factor,:self.num_channel,...]
+        # X = X[0::self.time_downsample_factor,:self.num_channel,...]
 
-        if self.apply_cloud_masking or self.return_cloud_cover:
-            CC = CC[0::self.time_downsample_factor,...]
+        # if self.apply_cloud_masking or self.return_cloud_cover:
+        #     CC = CC[0::self.time_downsample_factor,...]
 
         # NOTE TODO verify: here self.label_list represents elements from the GT column. this can be modified by selecting elements from the CODE column
         #Change labels 
         target = np.zeros_like(target_)
         target_local_1 = np.zeros_like(target_)
         target_local_2 = np.zeros_like(target_)
-        for i in range(len(self.label_list)): # NOTE here only the classes in label_list (Vegetation and hier4 is not none) get mapped. Other classes in target_ including no-data value 9999999 are not mapped (corresponding value in target is 0)
-            target[target_ == self.label_list[i]] = self.label_list_glob[i]
-            target_local_1[target_ == self.label_list[i]] = self.label_list_local_1[i]
-            target_local_2[target_ == self.label_list[i]] = self.label_list_local_2[i]
+        # for i in range(len(self.label_list)): # NOTE here only the classes in label_list (Vegetation and hier4 is not none) get mapped. Other classes in target_ including no-data value 9999999 are not mapped (corresponding value in target is 0)
+            # target[target_ == self.label_list[i]] = self.label_list_glob[i]
+            # target_local_1[target_ == self.label_list[i]] = self.label_list_local_1[i]
+            # target_local_2[target_ == self.label_list[i]] = self.label_list_local_2[i]
+        for i, code in enumerate(list(self.label_list.values())):  
+            target[target_ == code] = self.label_list_glob[i]
+            target_local_1[target_ == code] = self.label_list_local_1[i]
+            target_local_2[target_ == code] = self.label_list_local_2[i]
         
         X = torch.from_numpy(X)
         target = torch.from_numpy(target).float()
@@ -220,6 +231,17 @@ class Dataset(torch.utils.data.Dataset):
                 return X.float(), target.long(), target_local_1.long(), target_local_2.long(), gt_instance.long()
             else:
                 return X.float(), target.long(), target_local_1.long(), target_local_2.long()
+
+    def get_valid_list(self, mode):
+        valid = []
+        if mode == "train":
+            for k in self.canton_ids_train:
+                valid += self.data_canton_labels[k]
+        elif mode == "test":
+            for k in self.data_canton_labels.keys():
+                if k not in self.canton_ids_train:
+                    valid += self.data_canton_labels[k]
+        return np.array(valid)
 
     def get_rid_small_fg_tiles(self):
         valid = np.ones(self.samples)

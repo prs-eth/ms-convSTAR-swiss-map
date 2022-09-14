@@ -71,7 +71,7 @@ class multistageSTARSequentialEncoder(torch.nn.Module):
         if torch.cuda.is_available():
             for i in range(self.n_layers):
                 hiddenS[i] = hiddenS[i].cuda()
-
+        # TODO when training, also check t (number of time series) is 36 rather than 71
         for iter in range(t):
             hiddenS = self.rnn.forward( x[:,:,iter,:,:], hiddenS )
                     

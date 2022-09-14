@@ -25,6 +25,7 @@ def parse_args():
     parser.add_argument('-id', "--input_dim", default=4, type=int, help="Input channel size")
     parser.add_argument('-sd', "--seed", default=0, type=int, help="random seed")
     parser.add_argument('-gt', "--gt_path", default='labels.csv', type=str, help="gt file path")
+    # TODO add arguments to pass canton ids for test
     return parser.parse_args()
 
 
@@ -76,7 +77,7 @@ def main(
         checkpoint = torch.load(snapshot)
         network.load_state_dict(checkpoint['network_state_dict'])
         network_gt.load_state_dict(checkpoint['network_gt_state_dict'])
-
+    # NOTE modify the function, evaluation of different levels can be done at one time, just save gt targets for different levels to evaluate
     evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, level=1, fold_num=fold_num)
     evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, level=2, fold_num=fold_num)
     evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, level=3, fold_num=fold_num)

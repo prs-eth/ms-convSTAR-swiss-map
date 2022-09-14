@@ -13,14 +13,14 @@ from eval import evaluate_fieldwise
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', "--data", type=str, default='/scratch/tmehmet/train_set_24X24_debug.hdf5', help="path to dataset")
+    parser.add_argument('-d', "--data", type=str, default='../Preprocessing/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
     parser.add_argument('-b', "--batchsize", default=4, type=int, help="batch size")
     parser.add_argument('-w', "--workers", default=8, type=int, help="number of dataset worker threads")
     parser.add_argument('-e', "--epochs", default=30, type=int, help="epochs to train")
     parser.add_argument('-l', "--learning_rate", default=0.001, type=float, help="learning rate")
     parser.add_argument('-s', "--snapshot", default=None,
                         type=str, help="load weights from snapshot")
-    parser.add_argument('-c', "--checkpoint_dir", default='/home/pf/pfstaff/projects/ozgur_deep_filed/multi_stage/trained_models',
+    parser.add_argument('-c', "--checkpoint_dir", default='trained_models_new',
                         type=str,help="directory to save checkpoints")
     parser.add_argument('-wd', "--weight_decay", default=0.0001, type=float, help="weight_decay")
     parser.add_argument('-hd', "--hidden", default=64, type=int, help="hidden dim")
@@ -36,16 +36,21 @@ def parse_args():
     parser.add_argument('-cp', "--clip", default=5, type=float, help="grad clip")
     parser.add_argument('-sd', "--seed", default=0, type=int, help="random seed")
     parser.add_argument('-fd', "--fold", default=1, type=int, help="5 fold")
-    parser.add_argument('-gt', "--gt_path", default='labels.csv', type=str, help="gt file path")
+    parser.add_argument('-gt', "--gt_path", default='GT_labels_19_21_GP.csv', type=str, help="gt file path")
     parser.add_argument('-cell', "--cell", default='star', type=str, help="Cell type: main building block")
     parser.add_argument('-id', "--input_dim", default=4, type=int, help="Input channel size")
     parser.add_argument('-cm', "--apply_cm", default=False, type=bool, help="apply cloud masking")
+    # TODO pass argument for canton ids to train and canton ids to evaluate
+    parser.add_argument('--data_canton_labels', default = "../Preprocessing/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
+    parser.add_argument('--canton_ids_train', default = ["0", "3", "5", "14", "18", "19", "20", "25"], type=list, help="Canton ids to train")
 
     return parser.parse_args()
 
 
 def main(
         datadir=None,
+        data_canton_labels_dir=None,
+        canton_ids_train=None,
         batchsize=1,
         workers=12,
         epochs=1,
@@ -70,10 +75,10 @@ def main(
 ):
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
-
-    traindataset = Dataset(datadir, 0., 'train', False, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm)
-    testdataset = Dataset(datadir, 0., 'test', True, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm)
     
+    traindataset = Dataset(datadir, 0., 'train', False, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train)
+    testdataset = Dataset(datadir, 0., 'test', True, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train)
+    item = traindataset[0]
     nclasses = traindataset.n_classes
     nclasses_local_1 = traindataset.n_classes_local_1
     nclasses_local_2 = traindataset.n_classes_local_2
@@ -242,6 +247,8 @@ if __name__ == "__main__":
 
     main(
         datadir=args.data,
+        data_canton_labels_dir=args.data_canton_labels,
+        canton_ids_train=args.canton_ids_train,
         batchsize=args.batchsize,
         workers=args.workers,
         epochs=args.epochs,

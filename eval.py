@@ -15,6 +15,9 @@ def test(model, model_gt, dataloader, level=3):
     logprobabilities_refined = list()
     # NOTE get the corresponding target gt of given level
     for iteration, data in tqdm(enumerate(dataloader)):
+        # NOTE for test only: limit the number of samples
+        if iteration==10:
+            break
         if level==1:
             inputs, _, targets, _, gt_instance = data
         elif level ==2:
@@ -51,7 +54,7 @@ def test(model, model_gt, dataloader, level=3):
             logprobabilities.append(z2)
         else:
             logprobabilities.append(z3)
-
+        # NOTE the refined prediction is always based on level 3
         logprobabilities_refined.append(z3_refined)
         
     return np.vstack(logprobabilities), np.concatenate(targets_list), np.vstack(gt_instance_list), np.vstack(logprobabilities_refined)
@@ -119,23 +122,23 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=Fal
     dataloader = torch.utils.data.DataLoader(dataset=dataset, batch_size=batchsize, num_workers=workers)
 
     logprobabilites, targets, gt_instance, logprobabilites_refined = test(model, model_gt, dataloader, level)
+    # TODO TODO save the two probabilities for average mapping. prob map with max(logprob, 1). np.mean(5 prob distributions), np.sum. 
     predictions = logprobabilites.argmax(1)
     predictions_refined = logprobabilites_refined.argmax(1)
 
+    # NOTE one dimensional array after being flattened
     predictions = predictions.flatten()
     targets = targets.flatten()
     gt_instance = gt_instance.flatten()
     predictions_refined = predictions_refined.flatten()
-    # TODO address the cuda issue and rerun this part to check dimension of array here.
-    # TODO how to filter the unknown. Modify according to current hierarchy mapping.
-    # TODO this function is not used for reconstructing map (do not require GT/target)?
+
     # Ignore unknown class class_id=0
     if viz:
         valid_crop_samples = targets != 9999999999
-    elif level == 2 and ignore_undefined_classes:
+    elif level == 2 and ignore_undefined_classes: #TODO what does 7, 9, 12 mean here?
         valid_crop_samples = (targets != 0) * (targets != 7) * (targets != 9) * (targets != 12)
-    elif level == 2:
-        # TODO the meaning of 7,9,12 here? 
+    elif level == 2: 
+        # TODO the meaning of 7,9,12: actually the same categories (maize).
         targets[(targets == 7)] = 12
         targets[(targets == 9)] = 12
         predictions[(predictions == 7)] = 12
@@ -143,7 +146,7 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=Fal
         valid_crop_samples = (targets != 0) * (targets != 7) * (targets != 9)
     else:
         valid_crop_samples = targets != 0
-
+    # NOTE for map predictions. should we still filter the pixels with GT. since we will not have GT when doing inference
     targets_wo_unknown = targets[valid_crop_samples]
     predictions_wo_unknown = predictions[valid_crop_samples]
     gt_instance_wo_unknown = gt_instance[valid_crop_samples]
@@ -151,7 +154,7 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=Fal
 
     labels = np.unique(targets_wo_unknown)
     print('Num class: ', str(labels.shape[0]))
-
+    # NOTE evaluation of pixel-wise prediction
     if level == 3:
         confusion_matrix = build_confusion_matrix(targets_wo_unknown, predictions_refined_wo_unknown)
     else:
@@ -169,36 +172,39 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=Fal
     for i in np.unique(gt_instance_wo_unknown).tolist():
         field_indexes = gt_instance_wo_unknown == i
 
-        pred = predictions_wo_unknown[field_indexes]
+        pred = predictions_wo_unknown[field_indexes] #NOTE we can do filterng here before counting the pred to keep the original number of pixels so that it can be reshaped back.
         pred = np.bincount(pred)
         pred = np.argmax(pred)
-        prediction_wo_fieldwise[field_indexes] = pred
+        prediction_wo_fieldwise[field_indexes] = pred  
         prediction_field[count] = pred
-
+        
+        # NOTE the following lines should only calculated when level is 3? (though it can also be calculated in other levels)
         pred = predictions_refined_wo_unknown[field_indexes]
         pred = np.bincount(pred)
         pred = np.argmax(pred)
         prediction_wo_fieldwise_refined[field_indexes] = pred
+        # TODO for level_3, should also add prediction_field_refined[count] = pred
+        # TODO maybe prediction_field_refined = {gt_instance (i): pred}, or save as a csv. 
 
         target = targets_wo_unknown[field_indexes]
         target = np.bincount(target)
         target = np.argmax(target)
         target_field[count] = target
         count += 1
-
+    # NOTE evaluation of field-wise prediction
     if level == 3:
         confusion_matrix = build_confusion_matrix(targets_wo_unknown, prediction_wo_fieldwise_refined)
     else:
         confusion_matrix = build_confusion_matrix(targets_wo_unknown, prediction_wo_fieldwise)
 
     print_report(*confusion_matrix_to_accuraccies(confusion_matrix))
-    pix_accuracy = np.sum( prediction_wo_fieldwise_refined==targets_wo_unknown ) / prediction_wo_fieldwise_refined.shape[0]
+    pix_accuracy = np.sum( prediction_wo_fieldwise_refined==targets_wo_unknown ) / prediction_wo_fieldwise_refined.shape[0] #NOTE this line is problematic without constraints. refined is only applied to level3
 
-    # Save for the visulization
+    # Save for the visulization NOTE modify it is very messy here. 1. the array after filtering (wo_unknown) should cannot be reshaped back to 24*24. 2. Filtering can be used for evaluation/confusion matrix, but not necessary to save it for visualization? 3. for visualization: pixel-wise prediction, field-wise prediction. plus a gt_instance==0 mask.
     if viz:
         prediction_wo_fieldwise = prediction_wo_fieldwise.reshape(-1, 24, 24)
         targets = targets.reshape(-1, 24, 24)
-
+        # NOTE the data here to save for level 3 is also wrong.
         if level == 3:
             np.savez('/home/pf/pfstaff/projects/ozgur_MSconvRNN/result/msSTAR_ch_analysis4_level_' + str(
                 level) + '_fold_' + str(fold_num), targets=targets,
