@@ -50,6 +50,13 @@ def parse_args():
 
     return parser.parse_args()
 
+class stepCount():
+    def __init__(self, init_step=0):
+        self.step = init_step
+    def count(self):
+        self.step += 1
+    def reset(self):
+        self.step = 0
 
 def main(
         datadir=None,
@@ -158,11 +165,12 @@ def main(
         network_gt.load_state_dict(checkpoint['network_gt_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizerA_state_dict'])
 
+    step_count = stepCount(init_step=0)
     for epoch in range(start_epoch, epochs):
         print("\nEpoch {}".format(epoch+1))
-
+        
         train_epoch(traindataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2,
-                    lambda_1=lambda_1, lambda_2=lambda_2, lambda_3=lambda_3, lambda_gt=lambda_gt, stage=stage, grad_clip=clip)
+                    lambda_1=lambda_1, lambda_2=lambda_2, lambda_3=lambda_3, lambda_gt=lambda_gt, stage=stage, grad_clip=clip, step_count=step_count)
 
         # call LR scheduler
         lr_scheduler.step()
@@ -171,7 +179,9 @@ def main(
         if epoch > 1 and epoch % 1 == 0:
             print("\n Eval on test set") # NOTE default level is 3 for evaluate_fieldwise.
             test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
-
+            
+            wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
+            
             if checkpoint_dir is not None:
                 checkpoint_name = os.path.join(checkpoint_dir, name + '_epoch_' + str(epoch) + "_model.pth")
                 if test_acc > best_test_acc:
@@ -180,10 +190,13 @@ def main(
                     torch.save({'network_state_dict': network.state_dict(),
                                 'network_gt_state_dict': network_gt.state_dict(),
                                 'optimizerA_state_dict': optimizer.state_dict()}, checkpoint_name)
+                    
+                    wandb.summary["best val acc"] = test_acc
+                    wandb.summary["best epoch"] = epoch
 
 
 def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2, lambda_1,
-                lambda_2, lambda_3, lambda_gt, stage, grad_clip):
+                lambda_2, lambda_3, lambda_gt, stage, grad_clip, step_count):
 
     network.train()
     network_gt.train()
@@ -192,6 +205,7 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
     mean_loss_local_1 = 0.
     mean_loss_local_2 = 0.
     mean_loss_gt = 0.
+    mean_loss_total = 0.
     
     for iteration, data in enumerate(dataloader):
         optimizer.zero_grad()
@@ -235,16 +249,38 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
         torch.nn.utils.clip_grad_norm_(network_gt.parameters(), grad_clip)
         optimizer.step()
 
+        mean_loss_total += total_loss.data.cpu().numpy()
+        metrics_per_step = {"train_step/total_loss": total_loss,
+                            "train_step/local_loss_1": l_local_1,
+                            "train_step/local_loss_2": l_local_2,
+                            "train_step/global_loss": l_glob,
+                            "train_step/global_loss_refined": l_gt}
+        wandb.log(metrics_per_step, step=step_count.step)
+        print("step:", step_count.step, "total_loss: %.4f"%(total_loss.data.cpu().numpy()))
+        step_count.count()
+
+    mean_loss_local_1 /= (iteration+1)
+    mean_loss_local_2 /= (iteration+1)
+    mean_loss_glob /= (iteration+1)
+    mean_loss_gt /= (iteration+1)
+    mean_loss_total /= (iteration+1)
+
     print('Local Loss 1: %.4f' % (mean_loss_local_1 / iteration))
     print('Local Loss 2: %.4f' % (mean_loss_local_2 / iteration))
     print('Global Loss: %.4f' % (mean_loss_glob / iteration))
     print('Global Loss - Refined: %.4f' % (mean_loss_gt / iteration))
 
-
+    metrics_per_epoch = {"train_epoch/total_loss": mean_loss_total,
+                        "train_epoch/local_loss_1": mean_loss_local_1,
+                        "train_epoch/local_loss_2": mean_loss_local_2,
+                        "train_epoch/global_loss": mean_loss_glob,
+                        "train_epoch/global_loss_refined": mean_loss_gt}
+    wandb.log(metrics_per_epoch, step = step_count.step-1)
 
 if __name__ == "__main__":
     args = parse_args()
     print(args)
+    history_step = 0
 
     model_name = str(args.name) + '_' + str(args.cell) + '_' + str(args.input_dim) + '_' + str(args.batchsize) + '_' + str(
         args.learning_rate) + '_' + str(args.layer) + '_' + str(args.hidden) + '_' + str(args.lrSC) + '_' + str(
@@ -254,7 +290,12 @@ if __name__ == "__main__":
 
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-
+    wandb.init(
+        project='ms_convSTAR_CH_2021',
+        entity='yihshe',
+        name=f'experiment_{args.experiment_id}',
+        config=args
+    )
     main(
         datadir=args.data,
         data_canton_labels_dir=args.data_canton_labels,
@@ -285,3 +326,4 @@ if __name__ == "__main__":
         input_dim=args.input_dim,
         apply_cm = args.apply_cm
     )
+    wandb.finish()
