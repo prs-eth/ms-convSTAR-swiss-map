@@ -1,3 +1,4 @@
+import os
 import sys
 sys.path.append("src")
 sys.path.append("src/models")
@@ -16,8 +17,8 @@ def test(model, model_gt, dataloader, level=3):
     # NOTE get the corresponding target gt of given level
     for iteration, data in tqdm(enumerate(dataloader)):
         # NOTE for test only: limit the number of samples
-        if iteration==10:
-            break
+        # if iteration==10:
+        #     break
         if level==1:
             inputs, _, targets, _, gt_instance = data
         elif level ==2:
@@ -114,8 +115,14 @@ def print_report(overall_accuracy, kappa, precision, recall, f1, cl_acc):
     return cl_acc
 
 
-def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=False, fold_num=5, level=3,
+def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=False, prediction_dir = None, experiment_id = 0, fold_num=5, level=3,
                         ignore_undefined_classes=False):
+
+    if prediction_dir != None:
+        prediction_dir = f"{prediction_dir}_{experiment_id}"
+        if not os.path.exists(prediction_dir):
+            os.makedirs(prediction_dir)
+
     model.eval()
     model_gt.eval()
 
@@ -135,16 +142,17 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=Fal
     # Ignore unknown class class_id=0
     if viz:
         valid_crop_samples = targets != 9999999999
-    elif level == 2 and ignore_undefined_classes: #TODO what does 7, 9, 12 mean here?
+    elif level == 2 and ignore_undefined_classes: 
         valid_crop_samples = (targets != 0) * (targets != 7) * (targets != 9) * (targets != 12)
     elif level == 2: 
-        # TODO the meaning of 7,9,12: actually the same categories (maize).
+        # NOTE used for level 2. the meaning of 7,9,12: actually the same categories (maize).
         targets[(targets == 7)] = 12
         targets[(targets == 9)] = 12
         predictions[(predictions == 7)] = 12
         predictions[(predictions == 9)] = 12
         valid_crop_samples = (targets != 0) * (targets != 7) * (targets != 9)
     else:
+        # NOTE this is the valid crop samples we are going to use (also for level 3)
         valid_crop_samples = targets != 0
     # NOTE for map predictions. should we still filter the pixels with GT. since we will not have GT when doing inference
     targets_wo_unknown = targets[valid_crop_samples]
@@ -155,18 +163,23 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=Fal
     labels = np.unique(targets_wo_unknown)
     print('Num class: ', str(labels.shape[0]))
     # NOTE evaluation of pixel-wise prediction
+    # for level 3,  we use the refined predictions (TODO check in the paper whether the final output is also the refined prediction)
     if level == 3:
         confusion_matrix = build_confusion_matrix(targets_wo_unknown, predictions_refined_wo_unknown)
     else:
         confusion_matrix = build_confusion_matrix(targets_wo_unknown, predictions_wo_unknown)
     print_report(*confusion_matrix_to_accuraccies(confusion_matrix))
 
-
+    # NOTE pred can be level 1, 2, 3
     prediction_wo_fieldwise = np.zeros_like(targets_wo_unknown)
+    # NOTE pred_refined can only be level 3
     prediction_wo_fieldwise_refined = np.zeros_like(targets_wo_unknown)
+
     num_field = np.unique(gt_instance_wo_unknown).shape[0]
     target_field = np.ones(num_field) * 8888
     prediction_field = np.ones(num_field) * 9999
+    prediction_field_refined = np.ones(num_field)*9999
+    target_field_instance_id = np.zeros(num_field)
 
     count = 0
     for i in np.unique(gt_instance_wo_unknown).tolist():
@@ -176,20 +189,22 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=Fal
         pred = np.bincount(pred)
         pred = np.argmax(pred)
         prediction_wo_fieldwise[field_indexes] = pred  
-        prediction_field[count] = pred
+        prediction_field[count] = pred # for visual, pred depends on given level (for level3 it is not refined)
         
         # NOTE the following lines should only calculated when level is 3? (though it can also be calculated in other levels)
         pred = predictions_refined_wo_unknown[field_indexes]
         pred = np.bincount(pred)
         pred = np.argmax(pred)
         prediction_wo_fieldwise_refined[field_indexes] = pred
-        # TODO for level_3, should also add prediction_field_refined[count] = pred
-        # TODO maybe prediction_field_refined = {gt_instance (i): pred}, or save as a csv. 
+        prediction_field_refined = pred # for visual, level 3 refined pred. Final Result.
 
         target = targets_wo_unknown[field_indexes]
         target = np.bincount(target)
         target = np.argmax(target)
-        target_field[count] = target
+        target_field[count] = target # for visual
+        
+        target_field_instance_id[count] = i # for visual
+
         count += 1
     # NOTE evaluation of field-wise prediction
     if level == 3:
@@ -198,21 +213,18 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=Fal
         confusion_matrix = build_confusion_matrix(targets_wo_unknown, prediction_wo_fieldwise)
 
     print_report(*confusion_matrix_to_accuraccies(confusion_matrix))
-    pix_accuracy = np.sum( prediction_wo_fieldwise_refined==targets_wo_unknown ) / prediction_wo_fieldwise_refined.shape[0] #NOTE this line is problematic without constraints. refined is only applied to level3
+    # NOTE the fieldwise-refined-excluding unknow classes prediction is the final one we are going to  evaluate.
+    pix_accuracy = np.sum(prediction_wo_fieldwise_refined==targets_wo_unknown) / prediction_wo_fieldwise_refined.shape[0] #NOTE this line is problematic without constraints. refined is only applied to level3
 
-    # Save for the visulization NOTE modify it is very messy here. 1. the array after filtering (wo_unknown) should cannot be reshaped back to 24*24. 2. Filtering can be used for evaluation/confusion matrix, but not necessary to save it for visualization? 3. for visualization: pixel-wise prediction, field-wise prediction. plus a gt_instance==0 mask.
-    if viz:
-        prediction_wo_fieldwise = prediction_wo_fieldwise.reshape(-1, 24, 24)
-        targets = targets.reshape(-1, 24, 24)
-        # NOTE the data here to save for level 3 is also wrong.
+    # NOTE if visualization or if we want to save the evalluation results.
+    save_path = os.path.join(prediction_dir, f"predictions_level_{level}")
+    if viz: #used in test we want to save the csv and some other data for visualization purpose
         if level == 3:
-            np.savez('/home/pf/pfstaff/projects/ozgur_MSconvRNN/result/msSTAR_ch_analysis4_level_' + str(
-                level) + '_fold_' + str(fold_num), targets=targets,
-                     predictions_refined=prediction_wo_fieldwise_refined, cm=confusion_matrix,
-                     predictions=predictions_refined_wo_unknown)
+            np.savez(save_path, level=level, logprobabilites = logprobabilites, logprobabilites_refined = logprobabilites_refined, gt = targets, gt_instance = gt_instance, cm=confusion_matrix,
+            prediction_per_field = prediction_field, prediction_per_field_refined = prediction_field_refined, gt_per_field = target_field, field_instance_id = target_field_instance_id)
         else:
-            np.savez('/home/pf/pfstaff/projects/ozgur_MSconvRNN/result/msSTAR_ch_analysis4_level_' + str(
-                level) + '_fold_' + str(fold_num), targets=targets, predictions=prediction_wo_fieldwise,
-                     cm=confusion_matrix)
+            np.savez(save_path, level=level, logprobabilites = logprobabilites, targets = targets, gt_instance = gt_instance, cm=confusion_matrix,
+            prediction_per_field = prediction_field, gt_per_field = target_field, field_instance_id = target_field_instance_id)
+        
 
     return pix_accuracy

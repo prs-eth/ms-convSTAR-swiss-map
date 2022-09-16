@@ -73,7 +73,7 @@ class Dataset(torch.utils.data.Dataset):
         for i in range(len(tier_2)):
             if tier_1[i] == 'Vegetation' and tier_4[i] != '':
                 # self.label_list.append(i) # id in the label_list is same as column 'GT' in labels.csv. Or 'GT' column can be used here for selecting label_list
-                self.label_list[i] = tier_code[i]
+                self.label_list[i] = int(tier_code[i])
 
             if tier_2[i] == '':
                 tier_2[i] = '0_unknown'

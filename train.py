@@ -9,6 +9,7 @@ from dataset import Dataset
 from models.multi_stage_sequenceencoder import multistageSTARSequentialEncoder, multistageLSTMSequentialEncoder
 from models.networkConvRef import model_2DConv
 from eval import evaluate_fieldwise
+import wandb
 
 
 def parse_args():
@@ -20,7 +21,8 @@ def parse_args():
     parser.add_argument('-l', "--learning_rate", default=0.001, type=float, help="learning rate")
     parser.add_argument('-s', "--snapshot", default=None,
                         type=str, help="load weights from snapshot")
-    parser.add_argument('-c', "--checkpoint_dir", default='trained_models_new',
+    # NOTE this arg can set up when training trained_models_0
+    parser.add_argument('-c', "--checkpoint_dir", default='trained_models',
                         type=str,help="directory to save checkpoints")
     parser.add_argument('-wd', "--weight_decay", default=0.0001, type=float, help="weight_decay")
     parser.add_argument('-hd', "--hidden", default=64, type=int, help="hidden dim")
@@ -28,9 +30,9 @@ def parse_args():
     parser.add_argument('-lrs', "--lrSC", default=2, type=int, help="lrScheduler")
     parser.add_argument('-nm', "--name", default='msConvSTAR', type=str, help="name")
     parser.add_argument('-l1', "--lambda_1", default=0.1, type=float, help="lambda_1")
-    # TODO lambda2 0.5? It is 0.1, 0.3, 0.6 in the paper
-    # TODO look into the training flow agin following the data structure to see if it is consistent with the paper
-    parser.add_argument('-l2', "--lambda_2", default=0.5, type=float, help="lambda_2")
+    parser.add_argument('-l2', "--lambda_2", default=0.3, type=float, help="lambda_2")
+    parser.add_argument('-l3', "--lambda_3", default=0.6, type=float, help="lambda_3")
+    parser.add_argument('-l_gt', "--lambda_gt", default=0.6, type=float, help="lambda_gt")
     parser.add_argument('-dr', "--dropout", default=0.5, type=float, help="dropout of CNN")
     parser.add_argument('-stg', "--stage", default=3, type=float, help="num stage")
     parser.add_argument('-cp', "--clip", default=5, type=float, help="grad clip")
@@ -41,6 +43,8 @@ def parse_args():
     parser.add_argument('-id', "--input_dim", default=4, type=int, help="Input channel size")
     parser.add_argument('-cm', "--apply_cm", default=False, type=bool, help="apply cloud masking")
     # TODO pass argument for canton ids to train and canton ids to evaluate
+    parser.add_argument('-pred', "--prediction_dir", default='predictions', type=str,help="directory to save predictions")
+    parser.add_argument('-exp', "--experiment_id", default=0, type=int, help="times of running the experiment")
     parser.add_argument('--data_canton_labels', default = "../Preprocessing/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
     parser.add_argument('--canton_ids_train', default = ["0", "3", "5", "14", "18", "19", "20", "25"], type=list, help="Canton ids to train")
 
@@ -57,6 +61,8 @@ def main(
         lr=1e-3,
         snapshot=None,
         checkpoint_dir=None,
+        experiment_id=None,
+        prediction_dir=None,
         weight_decay=0.0000,
         name='debug',
         layer=6,
@@ -64,6 +70,8 @@ def main(
         lrS=1,
         lambda_1=1,
         lambda_2=1,
+        lambda_3=1,
+        lambda_gt=1,
         stage=3,
         clip=1,
         fold_num=None,
@@ -73,12 +81,13 @@ def main(
         input_dim=None,
         apply_cm=None
 ):
+    checkpoint_dir = f"{checkpoint_dir}_{experiment_id}"
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
     
     traindataset = Dataset(datadir, 0., 'train', False, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train)
     testdataset = Dataset(datadir, 0., 'test', True, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train)
-    item = traindataset[0]
+    
     nclasses = traindataset.n_classes
     nclasses_local_1 = traindataset.n_classes_local_1
     nclasses_local_2 = traindataset.n_classes_local_2
@@ -93,7 +102,6 @@ def main(
     # Class stage mappping. 3 stages to use
     s1_2_s3 = traindataset.l1_2_g
     s2_2_s3 = traindataset.l2_2_g
-
     traindataloader = torch.utils.data.DataLoader(traindataset, batch_size=batchsize, shuffle=True, num_workers=workers)
 
     # Define the model
@@ -154,7 +162,7 @@ def main(
         print("\nEpoch {}".format(epoch+1))
 
         train_epoch(traindataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2,
-                    lambda_1=lambda_1, lambda_2=lambda_2, stage=stage, grad_clip=clip)
+                    lambda_1=lambda_1, lambda_2=lambda_2, lambda_3=lambda_3, lambda_gt=lambda_gt, stage=stage, grad_clip=clip)
 
         # call LR scheduler
         lr_scheduler.step()
@@ -162,7 +170,7 @@ def main(
         # evaluate model
         if epoch > 1 and epoch % 1 == 0:
             print("\n Eval on test set") # NOTE default level is 3 for evaluate_fieldwise.
-            test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize)
+            test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
 
             if checkpoint_dir is not None:
                 checkpoint_name = os.path.join(checkpoint_dir, name + '_epoch_' + str(epoch) + "_model.pth")
@@ -175,7 +183,7 @@ def main(
 
 
 def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2, lambda_1,
-                lambda_2, stage, grad_clip):
+                lambda_2, lambda_3, lambda_gt, stage, grad_clip):
 
     network.train()
     network_gt.train()
@@ -203,8 +211,9 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
         l_local_1 = loss_local_1(output_local_1, target_local_1)
         l_local_2 = loss_local_2(output_local_2, target_local_2)
 
+        # TODO verify the lambda here, if it is same as the paper. 
         if stage == 3 or stage == 1:
-            total_loss = l_glob + lambda_1 * l_local_1 + lambda_2 * l_local_2
+            total_loss = lambda_3 * l_glob + lambda_1 * l_local_1 + lambda_2 * l_local_2
         elif stage == 2:
             total_loss = l_glob + lambda_2 * l_local_2
         else:
@@ -218,8 +227,9 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
         output_glob_R = network_gt([output_local_1, output_local_2, output_glob])
         l_gt = loss(output_glob_R, target_glob)
         mean_loss_gt += l_gt.data.cpu().numpy()
-        # TODO the losses terms can be plot in wandb during training
-        total_loss = total_loss + l_gt
+
+        # TODO log the loss in wandb during training.
+        total_loss = total_loss + lambda_gt * l_gt
         total_loss.backward()
         torch.nn.utils.clip_grad_norm_(network.parameters(), grad_clip)
         torch.nn.utils.clip_grad_norm_(network_gt.parameters(), grad_clip)
@@ -255,6 +265,8 @@ if __name__ == "__main__":
         lr=args.learning_rate,
         snapshot=args.snapshot,
         checkpoint_dir=args.checkpoint_dir,
+        experiment_id = args.experiment_id,
+        prediction_dir = args.prediction_dir,
         weight_decay=args.weight_decay,
         name=model_name,
         layer=args.layer,
@@ -262,6 +274,8 @@ if __name__ == "__main__":
         lrS=args.lrSC,
         lambda_1=args.lambda_1,
         lambda_2=args.lambda_2,
+        lambda_3=args.lambda_3,
+        lambda_gt=args.lambda_gt,
         stage=args.stage,
         clip=args.clip,
         fold_num=args.fold,
