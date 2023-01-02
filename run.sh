@@ -11,9 +11,9 @@ python3 -m train --seed 0 --experiment_id 0
 # python3 -m train --seed 3 --experiment_id 3
 # python3 -m train --seed 4 --experiment_id 4
 
-# python3 -m test --snapshot checkpoint_dir -seed 0 --experiment_id 0 
-# python3 -m test --snapshot checkpoint_dir -seed 1 --experiment_id 1
-# python3 -m test --snapshot checkpoint_dir -seed 2 --experiment_id 2 
-# python3 -m test --snapshot checkpoint_dir -seed 3 --experiment_id 3 
-# python3 -m test --snapshot checkpoint_dir -seed 4 --experiment_id 4 
+# python3 -m test --snapshot path/to/model --experiment_id 0 
+# python3 -m test --snapshot path/to/model --experiment_id 1
+# python3 -m test --snapshot path/to/model --experiment_id 2 
+# python3 -m test --snapshot path/to/model --experiment_id 3 
+# python3 -m test --snapshot path/to/model --experiment_id 4 
 
