@@ -26,30 +26,14 @@ class Dataset(torch.utils.data.Dataset):
         self.data_canton_labels = json.load(open(data_canton_labels_dir))
         self.canton_ids_train = canton_ids_train
 
-        # TODO replace the split/valid_list here with the pre-split data
-        #Get train/test split
-        # if small_train_set_mode:
-        #     print('Small training-set mode - fold: ', fold, '  Mode: ', mode)
-        #     self.valid_list = self.split_train_test_23(mode, self.fold)
-        # elif self.fold != None:
-        #     print('5fold: ', fold, '  Mode: ', mode)
-        #     self.valid_list = self.split_5fold(mode, self.fold) 
-        # else:
-        #     self.valid_list = self.split(mode) 
+        # return the patch indices depending on the mode "train" or "test"
         self.valid_list = self.get_valid_list(mode)
-        # NOTE self.valid_list 1-dimension array of indices of selected patches for train or for test
         self.valid_samples = self.valid_list.shape[0]
-        
-        # NOTE hard coding 142 as the original number of max_obs as appeared in data. Meanings of self.max_obs 142 -> 71
-        # TODO remove the time_downsample as the time series has been pre-selected
-        # self.time_downsample_factor = time_downsample_factor
-        # self.max_obs = int(142/self.time_downsample_factor) #71
 
         gt_path_ = './utils/' + gt_path        
         if not os.path.exists(gt_path_):
             gt_path_ = './'  + gt_path        
         
-        # TODO TODO run though the code here to learn how the mapping works clearly.
         file=open(gt_path_, "r")
         tier_1 = []
         tier_2 = []
@@ -62,9 +46,8 @@ class Dataset(torch.utils.data.Dataset):
             tier_2.append(line[-4]) #'2nd_tier'
             tier_3.append(line[-3]) #'3rd_tier'
             tier_4.append(line[-2]) #'4th_tier_ENG'
-            tier_code.append(line[1])
-        
-        # NOTE tier_1[0] is "1th_tier"
+            tier_code.append(line[1]) #'LNF_code'
+
         tier_2[0] = '0_unknown'
         tier_3[0] = '0_unknown'
         tier_4[0] = '0_unknown'
@@ -72,7 +55,7 @@ class Dataset(torch.utils.data.Dataset):
         self.label_list = {}
         for i in range(len(tier_2)):
             if tier_1[i] == 'Vegetation' and tier_4[i] != '':
-                # self.label_list.append(i) # id in the label_list is same as column 'GT' in labels.csv. Or 'GT' column can be used here for selecting label_list
+                # the mapping between numerical indices and LNF_code
                 self.label_list[i] = int(tier_code[i])
 
             if tier_2[i] == '':
@@ -82,7 +65,6 @@ class Dataset(torch.utils.data.Dataset):
             if tier_4[i] == '':
                 tier_4[i] = '0_unknown'
             
-        # NOTE tier_2: original columns of label.csv, with no-data filled as '0_unknown'   
         tier_2_elements = list(set(tier_2)) # len of list 6
         tier_3_elements = list(set(tier_3)) # 20
         tier_4_elements = list(set(tier_4)) # 52
@@ -90,7 +72,7 @@ class Dataset(torch.utils.data.Dataset):
         tier_3_elements.sort()
         tier_4_elements.sort()
         
-        # NOTE tier_2_ map of tier_2 from string to numerical index of the classes of this column in the csv file
+        # to map the predicted indices back to names, use tier_4_elements[index]
         tier_2_ = []
         tier_3_ = []
         tier_4_ = []
@@ -113,8 +95,8 @@ class Dataset(torch.utils.data.Dataset):
             self.label_list_local_1_name.append(tier_2[int(gt)])
             self.label_list_local_2_name.append(tier_3[int(gt)])
             self.label_list_glob_name.append(tier_4[int(gt)])
-        # NOTE this way the classes does not belong to 'Vegetation' in hier3 will still be included and predicted in the output channel
-        # NOTE +1 represents the 'unknown' class. the actual n_classes contained in self.label_list is only 48, 52 is the number of original all classes
+
+        # +1 represents the 'unknown' class. the actual n_classes contained in self.label_list is only 48, 52 is the number of all original classes
         self.n_classes = max(self.label_list_glob) + 1 #52
         self.n_classes_local_1 = max(self.label_list_local_1) + 1 #6
         self.n_classes_local_2 = max(self.label_list_local_2) + 1 #20
@@ -132,12 +114,12 @@ class Dataset(torch.utils.data.Dataset):
         self.l2_2_g = np.zeros(self.n_classes)
         self.l1_2_l2 = np.zeros(self.n_classes_local_2)
         
-        # NOTE label_list_glob (or label_list_l3) is the mapping of label_list (selected elements of column 'GT') to hier4 labels
+        # label_list_glob (or label_list_l3) is the mapping of label_list (selected elements of column 'GT') to hier4 labels
         for i in range(1,self.n_classes):
             if i in self.label_list_glob:
                 self.l1_2_g[i] = self.label_list_local_1[self.label_list_glob.index(i)]
                 self.l2_2_g[i] = self.label_list_local_2[self.label_list_glob.index(i)]
-        # NOTE if the class is not in label_list, then the corresponding l1 mapping here is 0 (parent class 'unknown')
+        # if the class is not in label_list, then the corresponding l1 mapping here is 0 (parent class 'unknown')
         for i in range(1,self.n_classes_local_2):
             if i in self.label_list_local_2:
                 self.l1_2_l2[i] = self.label_list_local_1[self.label_list_local_2.index(i)]
@@ -146,8 +128,7 @@ class Dataset(torch.utils.data.Dataset):
         return self.valid_samples
 
     def __getitem__(self, idx):
-        # TODO TODO the following lines need to be modified for the current hdf5 file
-        # TODO when creating dataset for 'test', lines under eval_mode also needs to be checked  
+        # TODO save the hdf5 file in batch as .npz file to load the data faster
         idx = self.valid_list[idx]
         X = self.data["data"][idx]
 
@@ -155,27 +136,18 @@ class Dataset(torch.utils.data.Dataset):
             CC = self.data["cloud_cover"][idx]
 
         target_ = self.data["gt"][idx,...,0]
-        if self.eval_mode: # TODO it seems that for evaluation, we do not need to return 'gt_canton'
+        if self.eval_mode: #it seems that for evaluation, we do not need to return 'gt_canton'
             gt_instance = self.data["gt_instance"][idx,...,0]
 
         X = np.transpose(X, (0, 3, 1, 2))
 
-        # TODO remove the downsample and channel selection. Change from (71, 4, 24, 24) to (36, 4, 24, 24). Whether the number of input channels need to be modified.
-        # Temporal downsampling
-        # X = X[0::self.time_downsample_factor,:self.num_channel,...]
-
-        # if self.apply_cloud_masking or self.return_cloud_cover:
-        #     CC = CC[0::self.time_downsample_factor,...]
-
-        # NOTE TODO verify: here self.label_list represents elements from the GT column. this can be modified by selecting elements from the CODE column
         #Change labels 
         target = np.zeros_like(target_)
         target_local_1 = np.zeros_like(target_)
         target_local_2 = np.zeros_like(target_)
-        # for i in range(len(self.label_list)): # NOTE here only the classes in label_list (Vegetation and hier4 is not none) get mapped. Other classes in target_ including no-data value 9999999 are not mapped (corresponding value in target is 0)
-            # target[target_ == self.label_list[i]] = self.label_list_glob[i]
-            # target_local_1[target_ == self.label_list[i]] = self.label_list_local_1[i]
-            # target_local_2[target_ == self.label_list[i]] = self.label_list_local_2[i]
+        
+        #here only the classes in label_list (Vegetation and hier4 is not none) get mapped. Other classes in target_ including no-data value 9999999 are not mapped (corresponding value in target is 0)
+        #use the inversed mapping to map the predictions back to code
         for i, code in enumerate(list(self.label_list.values())):  
             target[target_ == code] = self.label_list_glob[i]
             target_local_1[target_ == code] = self.label_list_local_1[i]
@@ -247,11 +219,10 @@ class Dataset(torch.utils.data.Dataset):
         valid = np.ones(self.samples)
         w,h = self.data["gt"][0,...,0].shape
         for i in range(self.samples):
-            # NOTE if proportion of pixels in 24*24 patch is less than t, then this sample is marked as 0
-            # TODO meaning of gt label 0? and verify if self.t 0 is same as paper
+            #if proportion of pixels in 24*24 patch is less than t, then this sample is marked as 0
             if np.sum( self.data["gt"][i,...,0] != 0 )/(w*h) < self.t:
                 valid[i] = 0
-        # NOTE return the indices of samples marked as 1 in valid (binary array)
+        #return the indices of samples marked as 1 in valid (binary array)
         return np.nonzero(valid)[0]
         
     def split(self, mode):

@@ -13,9 +13,9 @@ from eval import evaluate_fieldwise
 
 
 def parse_args():
+    # specify the dir for --data, --snapshot, --prediction_dir, and --experiment_id
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', "--data", type=str, default='/scratch/tmehmet/train_set_24X24_debug.hdf5', help="path to dataset")
-    parser.add_argument('-fd', "--fold", default=1, type=int, help="5 fold")
+    parser.add_argument('-d', "--data", type=str, default='../Preprocessing/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
     parser.add_argument('-b', "--batchsize", default=1, type=int, help="batch size")
     parser.add_argument('-s', "--snapshot",type=str, help="load weights from snapshot",
                         default='/home/pf/pfstaff/projects/ozgur_MSconvRNN/trained_models_rep/fold1.pth',)
@@ -25,20 +25,22 @@ def parse_args():
     parser.add_argument('-id', "--input_dim", default=4, type=int, help="Input channel size")
     parser.add_argument('-sd', "--seed", default=0, type=int, help="random seed")
     parser.add_argument('-gt', "--gt_path", default='labels.csv', type=str, help="gt file path")
-    # TODO add arguments to pass canton ids for test
+    parser.add_argument('-pred', "--prediction_dir", default='predictions', type=str,help="directory to save predictions")
+    parser.add_argument('-exp', "--experiment_id", default=0, type=int, help="times of running the experiment")
     return parser.parse_args()
 
 
 def main(
         datadir=None,
-        fold_num=None,
         batchsize=1,
         snapshot=None,
         layer=6,
         hidden=64,
         stage=3,
         gt_path=None,
-        input_dim=None
+        input_dim=None,
+        prediction_dir = None,
+        experiment_id = None,
 ):
 
     testdataset = Dataset(datadir, 0., 'test', eval_mode=True, fold=fold_num, gt_path=gt_path, return_cloud_cover=False,
@@ -78,9 +80,9 @@ def main(
         network.load_state_dict(checkpoint['network_state_dict'])
         network_gt.load_state_dict(checkpoint['network_gt_state_dict'])
     # NOTE modify the function, evaluation of different levels can be done at one time, just save gt targets for different levels to evaluate
-    evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, level=1, fold_num=fold_num)
-    evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, level=2, fold_num=fold_num)
-    evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, level=3, fold_num=fold_num)
+    evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, level=1, prediction_dir=prediction_dir, experiment_id=experiment_id)
+    evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, level=2, prediction_dir=prediction_dir, experiment_id=experiment_id)
+    evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, level=3, prediction_dir=prediction_dir, experiment_id=experiment_id)
 
 if __name__ == "__main__":
     args = parse_args()
@@ -97,5 +99,7 @@ if __name__ == "__main__":
         hidden=args.hidden,
         stage=args.stage,
         gt_path=args.gt_path,
-        input_dim=args.input_dim
+        input_dim=args.input_dim,
+        prediction_dir=args.prediction_dir,
+        experiment_id=args.experiment_id
     )

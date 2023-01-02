@@ -13,6 +13,17 @@ import wandb
 
 
 def parse_args():
+    """
+    To highlight a few important variables:
+        --data, hdf5 file, preprocessed data used for training and testing
+        --gt_path, csv file, hierarchy of crop labels 
+        --seed, int, change the random seed for another round of training, and then aggregate the predictions
+        --data_canton_labels, json file of a dict, patch indices of the hdf5 grouped by canton ids
+        --canton_ids_train, list, selected cantons for training; the rest will be used for testing
+        --checkpoint_dir, str, path to save the trained models
+        --prediction_dir, str, path to save the predictions
+    All default values of these variables are those currently being used.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', "--data", type=str, default='../Preprocessing/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
     parser.add_argument('-b', "--batchsize", default=4, type=int, help="batch size")
@@ -21,7 +32,6 @@ def parse_args():
     parser.add_argument('-l', "--learning_rate", default=0.001, type=float, help="learning rate")
     parser.add_argument('-s', "--snapshot", default=None,
                         type=str, help="load weights from snapshot")
-    # NOTE this arg can set up when training trained_models_0
     parser.add_argument('-c', "--checkpoint_dir", default='trained_models',
                         type=str,help="directory to save checkpoints")
     parser.add_argument('-wd', "--weight_decay", default=0.0001, type=float, help="weight_decay")
@@ -42,7 +52,6 @@ def parse_args():
     parser.add_argument('-cell', "--cell", default='star', type=str, help="Cell type: main building block")
     parser.add_argument('-id', "--input_dim", default=4, type=int, help="Input channel size")
     parser.add_argument('-cm', "--apply_cm", default=False, type=bool, help="apply cloud masking")
-    # TODO pass argument for canton ids to train and canton ids to evaluate
     parser.add_argument('-pred', "--prediction_dir", default='predictions', type=str,help="directory to save predictions")
     parser.add_argument('-exp', "--experiment_id", default=0, type=int, help="times of running the experiment")
     parser.add_argument('--data_canton_labels', default = "../Preprocessing/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
@@ -177,7 +186,7 @@ def main(
 
         # evaluate model
         if epoch > 1 and epoch % 1 == 0:
-            print("\n Eval on test set") # NOTE default level is 3 for evaluate_fieldwise.
+            print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
             test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
             
             wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
