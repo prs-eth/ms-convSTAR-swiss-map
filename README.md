@@ -59,10 +59,12 @@ For visualization, the per-field predictions are saved as a `csv` file besides t
   * `target_field`: gt of the field
   * `prediction_field`: original prediction of each field
   * `prediction_field_refined`: refined prediction of each field (only for the bottom level)
+
 Note that the predictions of the model are continuous ids. You will need to map them back to corresponding species names to have a meaningful predictions. See line 89 to 97 and line 151 to 154 of `dataset.py`. 
   * For example, at the bottom level, the predicted id is the element of the list `self.label_list_glob`; just find the element of the same index  of the list `self.label_list_glob_name` for the inverse mapping. 
   * For level 1, use `self.label_list_local_1` and `self.label_list_local_1_name`. 
   * For level 2, use `self.label_list_local_2` and `self.label_list_local_2_name`.
+
 You can then join the `csv` and the shapefile `LWB_vector_merged_processed` for visualization. Use `target_field_instance_id` of the `csv` and `GLOBAL_ID` of the shapefile as the fields to join the two tables.
 
 
