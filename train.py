@@ -54,7 +54,7 @@ def parse_args():
     parser.add_argument('-cm', "--apply_cm", default=False, type=bool, help="apply cloud masking")
     parser.add_argument('-pred', "--prediction_dir", default='predictions', type=str,help="directory to save predictions")
     parser.add_argument('-exp', "--experiment_id", default=0, type=int, help="times of running the experiment")
-    parser.add_argument('--data_canton_labels', default = "../Preprocessing/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
+    parser.add_argument('--data_canton_labels', default = "/cluster/work/igp_psr/tmehmet/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
     parser.add_argument('--canton_ids_train', default = ["0", "3", "5", "14", "18", "19", "20", "25"], type=list, help="Canton ids to train")
 
     return parser.parse_args()
