@@ -11,4 +11,4 @@
 export CUDA_VISIBLE_DEVICES=0,1
 printenv CUDA_VISIBLE_DEVICES
 
-python3 film_naive_euler.py 
+python3 train.py --seed 0 --experiment_id 0 
