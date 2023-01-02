@@ -158,10 +158,15 @@ def main(
 
 
     print('CUDA available: ', torch.cuda.is_available())
-    print('Number of GPUs', torch.cuda.device_count())
+    num_gpus = torch.cuda.device_count()
+    print('Number of GPUs', num_gpus)
     if torch.cuda.is_available():
-        network = torch.nn.DataParallel(network).cuda()
-        network_gt = torch.nn.DataParallel(network_gt).cuda()
+        network = network.cuda()
+        network_gt = network_gt.cuda()
+        
+        network = torch.nn.parallel.DataParallel(network, device_ids=list(range(num_gpus)), dim=0)
+        network = torch.nn.parallel.DataParallel(network, device_ids=list(range(num_gpus)), dim=0)
+        
         loss = loss.cuda()
         loss_local_1 = loss_local_1.cuda()
         loss_local_2 = loss_local_2.cuda()
