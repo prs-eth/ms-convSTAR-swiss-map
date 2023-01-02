@@ -189,7 +189,7 @@ def main(
             print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
             test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
             
-            wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
+            #wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
             
             if checkpoint_dir is not None:
                 checkpoint_name = os.path.join(checkpoint_dir, name + '_epoch_' + str(epoch) + "_model.pth")
@@ -200,8 +200,8 @@ def main(
                                 'network_gt_state_dict': network_gt.state_dict(),
                                 'optimizerA_state_dict': optimizer.state_dict()}, checkpoint_name)
                     
-                    wandb.summary["best val acc"] = test_acc
-                    wandb.summary["best epoch"] = epoch
+                    #wandb.summary["best val acc"] = test_acc
+                    #wandb.summary["best epoch"] = epoch
 
 
 def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2, lambda_1,
@@ -264,7 +264,7 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
                             "train_step/local_loss_2": l_local_2,
                             "train_step/global_loss": l_glob,
                             "train_step/global_loss_refined": l_gt}
-        wandb.log(metrics_per_step, step=step_count.step)
+        #wandb.log(metrics_per_step, step=step_count.step)
         print("step:", step_count.step, "total_loss: %.4f"%(total_loss.data.cpu().numpy()))
         step_count.count()
 
@@ -284,7 +284,7 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
                         "train_epoch/local_loss_2": mean_loss_local_2,
                         "train_epoch/global_loss": mean_loss_glob,
                         "train_epoch/global_loss_refined": mean_loss_gt}
-    wandb.log(metrics_per_epoch, step = step_count.step-1)
+    #wandb.log(metrics_per_epoch, step = step_count.step-1)
 
 if __name__ == "__main__":
     args = parse_args()
@@ -299,12 +299,8 @@ if __name__ == "__main__":
 
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    wandb.init(
-        project='ms_convSTAR_CH_2021',
-        entity='yihshe',
-        name=f'experiment_{args.experiment_id}',
-        config=args
-    )
+    #wandb.init(project='ms_convSTAR_CH_2021', entity='yihshe', name=f'experiment_{args.experiment_id}',config=args)
+    
     main(
         datadir=args.data,
         data_canton_labels_dir=args.data_canton_labels,
@@ -335,4 +331,4 @@ if __name__ == "__main__":
         input_dim=args.input_dim,
         apply_cm = args.apply_cm
     )
-    wandb.finish()
+    #wandb.finish()
