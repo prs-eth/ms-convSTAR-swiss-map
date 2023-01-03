@@ -185,7 +185,7 @@ def main(
         #ddp_network = DDP(network, device_ids=device_ids, output_device=local_rank)
         
         device = torch.device("cuda:{}".format(local_rank))
-        network = model.to(device)
+        network = network.to(device)
         ddp_network = torch.nn.parallel.DistributedDataParallel(network, device_ids=[local_rank], output_device=local_rank)
 
 
