@@ -151,7 +151,7 @@ def main(
     params = sum([np.prod(p.size()) for p in model_parameters]) 
     print('Num params: ', params)
 
-    optimizer = torch.optim.Adam(list(network.parameters())), lr=lr,  weight_decay=weight_decay)
+    optimizer = torch.optim.Adam(network.parameters(), lr=lr,  weight_decay=weight_decay)
     
     loss = torch.nn.CrossEntropyLoss(weight=LOSS_WEIGHT)
     loss_local_1 = torch.nn.CrossEntropyLoss(weight=LOSS_WEIGHT_LOCAL_1)
