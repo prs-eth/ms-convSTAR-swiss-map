@@ -176,7 +176,7 @@ def main(
     world_size = 1
     device_ids = list(range(local_rank * num_gpus, (local_rank + 1) * num_gpus))
     
-    print(f"Running basic DDP example on rank {local_rank}.")
+    print(f"Running DDP on rank {local_rank}.")
     setup(local_rank, world_size)
 
     if torch.cuda.is_available():
