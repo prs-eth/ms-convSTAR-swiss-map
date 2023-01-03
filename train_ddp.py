@@ -251,9 +251,9 @@ def train_epoch(dataloader, network, ddp_network, network_gt, optimizer, loss, l
 
         if torch.cuda.is_available():
             #input = input.to(device_ids[0])
-            target_glob = target_glob.to(device_ids[0])
-            target_local_1 = target_local_1.to(device_ids[0])
-            target_local_2 = target_local_2.to(device_ids[0])
+            target_glob = target_glob.cuda(device_ids[0])
+            target_local_1 = target_local_1.cuda(device_ids[0])
+            target_local_2 = target_local_2.cuda(device_ids[0])
 
         output_glob, output_local_1, output_local_2 = ddp_network.forward(input)
 
