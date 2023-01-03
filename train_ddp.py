@@ -204,7 +204,8 @@ def main(
         print("\nEpoch {}".format(epoch+1))
         
         train_epoch(traindataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2,
-                    lambda_1=lambda_1, lambda_2=lambda_2, lambda_3=lambda_3, lambda_gt=lambda_gt, stage=stage, grad_clip=clip, step_count=step_count)
+                    lambda_1=lambda_1, lambda_2=lambda_2, lambda_3=lambda_3, lambda_gt=lambda_gt, stage=stage, grad_clip=clip, step_count=step_count,
+                    device_ids=device_ids)
 
         # call LR scheduler
         lr_scheduler.step()
@@ -231,7 +232,7 @@ def main(
     cleanup()                    
 
 def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2, lambda_1,
-                lambda_2, lambda_3, lambda_gt, stage, grad_clip, step_count):
+                lambda_2, lambda_3, lambda_gt, stage, grad_clip, step_count, device_ids=device_ids):
 
     network.train()
     #network_gt.train()
