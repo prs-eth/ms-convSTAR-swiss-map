@@ -181,8 +181,13 @@ def main(
 
     if torch.cuda.is_available():
         
-        network = network.cuda(device_ids[0])        
-        ddp_network = DDP(network, device_ids=device_ids, output_device=local_rank)
+        #network = network.cuda(device_ids[0])        
+        #ddp_network = DDP(network, device_ids=device_ids, output_device=local_rank)
+        
+        device = torch.device("cuda:{}".format(local_rank))
+        network = model.to(device)
+        ddp_network = torch.nn.parallel.DistributedDataParallel(network, device_ids=[local_rank], output_device=local_rank)
+
 
        
     start_epoch = 0
@@ -201,7 +206,7 @@ def main(
         
         train_epoch(traindataloader, network, ddp_network, network_gt, optimizer, loss, loss_local_1, loss_local_2,
                     lambda_1=lambda_1, lambda_2=lambda_2, lambda_3=lambda_3, lambda_gt=lambda_gt, stage=stage, grad_clip=clip, step_count=step_count,
-                    device_ids=device_ids)
+                    device_ids=device_ids, device=device)
 
         # call LR scheduler
         lr_scheduler.step()
@@ -228,7 +233,7 @@ def main(
     cleanup()                    
 
 def train_epoch(dataloader, network, ddp_network, network_gt, optimizer, loss, loss_local_1, loss_local_2, lambda_1,
-                lambda_2, lambda_3, lambda_gt, stage, grad_clip, step_count, device_ids):
+                lambda_2, lambda_3, lambda_gt, stage, grad_clip, step_count, device_ids, device):
 
     network.train()
     ddp_network.train()
@@ -246,10 +251,10 @@ def train_epoch(dataloader, network, ddp_network, network_gt, optimizer, loss, l
         input, target_glob, target_local_1, target_local_2 = data
 
         if torch.cuda.is_available():
-            input = input.cuda(device_ids[0])
-            target_glob = target_glob.cuda(device_ids[0])
-            target_local_1 = target_local_1.cuda(device_ids[0])
-            target_local_2 = target_local_2.cuda(device_ids[0])
+            input = input.to(device)
+            target_glob = target_glob.to(device)
+            target_local_1 = target_local_1.to(device)
+            target_local_2 = target_local_2.to(device)
 
         output_glob, output_local_1, output_local_2 = ddp_network.forward(input)
 
