@@ -234,7 +234,7 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
                 lambda_2, lambda_3, lambda_gt, stage, grad_clip, step_count):
 
     network.train()
-    network_gt.train()
+    #network_gt.train()
 
     mean_loss_glob = 0.
     mean_loss_local_1 = 0.
