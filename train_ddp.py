@@ -232,7 +232,7 @@ def main(
     cleanup()                    
 
 def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2, lambda_1,
-                lambda_2, lambda_3, lambda_gt, stage, grad_clip, step_count, device_ids=device_ids):
+                lambda_2, lambda_3, lambda_gt, stage, grad_clip, step_count, device_ids):
 
     network.train()
     #network_gt.train()
