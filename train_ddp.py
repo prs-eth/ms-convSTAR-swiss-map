@@ -181,14 +181,10 @@ def main(
 
     if torch.cuda.is_available():
         
-        network = network.to(device_ids[0])        
+        network = network.cuda(device_ids[0])        
         ddp_network = DDP(network, device_ids=device_ids, output_device=local_rank)
 
-        
-        #loss = loss.to(device_ids[0])
-        #loss_local_1 = loss_local_1.to(device_ids[0])
-        #loss_local_2 = loss_local_2.to(device_ids[0])
-
+       
     start_epoch = 0
     best_test_acc = 0
 
@@ -250,7 +246,7 @@ def train_epoch(dataloader, network, ddp_network, network_gt, optimizer, loss, l
         input, target_glob, target_local_1, target_local_2 = data
 
         if torch.cuda.is_available():
-            input = input.to(device_ids[0])
+            input = input.cuda(device_ids[0])
             target_glob = target_glob.cuda(device_ids[0])
             target_local_1 = target_local_1.cuda(device_ids[0])
             target_local_2 = target_local_2.cuda(device_ids[0])
