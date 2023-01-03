@@ -203,7 +203,7 @@ def main(
     for epoch in range(start_epoch, epochs):
         print("\nEpoch {}".format(epoch+1))
         
-        train_epoch(traindataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2,
+        train_epoch(traindataloader, ddp_network, network_gt, optimizer, loss, loss_local_1, loss_local_2,
                     lambda_1=lambda_1, lambda_2=lambda_2, lambda_3=lambda_3, lambda_gt=lambda_gt, stage=stage, grad_clip=clip, step_count=step_count,
                     device_ids=device_ids)
 
@@ -231,7 +231,7 @@ def main(
                     
     cleanup()                    
 
-def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2, lambda_1,
+def train_epoch(dataloader, ddp_network, network_gt, optimizer, loss, loss_local_1, loss_local_2, lambda_1,
                 lambda_2, lambda_3, lambda_gt, stage, grad_clip, step_count, device_ids):
 
     network.train()
