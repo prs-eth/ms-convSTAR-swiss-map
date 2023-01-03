@@ -11,6 +11,8 @@ from models.networkConvRef import model_2DConv
 from eval import evaluate_fieldwise
 import wandb
 from torch.nn.parallel import DistributedDataParallel as DDP
+import torch.multiprocessing as mp
+import torch.distributed as dist
 
 
 def setup(rank, world_size):
