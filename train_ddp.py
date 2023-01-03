@@ -278,7 +278,7 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
         # TODO log the loss in wandb during training.
         #total_loss = total_loss + lambda_gt * l_gt
         total_loss.backward()
-        torch.nn.utils.clip_grad_norm_(network.parameters(), grad_clip)
+        torch.nn.utils.clip_grad_norm_(ddp_network.parameters(), grad_clip)
         #torch.nn.utils.clip_grad_norm_(network_gt.parameters(), grad_clip)
         optimizer.step()
 
