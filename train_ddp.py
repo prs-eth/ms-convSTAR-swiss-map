@@ -143,7 +143,7 @@ def main(
     print(f"Running DDP on rank {local_rank}.")
     setup(local_rank, world_size)
 
-    sampler = DistributedSampler(traindataset, num_replicas=world_size, rank=local_rank, shuffle=False, drop_last=False)
+    sampler = DistributedSampler(traindataset, num_replicas=world_size, rank=local_rank, drop_last=False)
     traindataloader = torch.utils.data.DataLoader(traindataset, batch_size=batchsize, 
     shuffle=True, num_workers=workers, sampler=sampler, pin_memory=True)
 
