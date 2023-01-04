@@ -171,7 +171,7 @@ def main(
 
     print('CUDA available: ', torch.cuda.is_available())
     num_gpus = torch.cuda.device_count()
-    print('Number of GPUs', num_gpus)
+    print('Number of GPUs: ', num_gpus)
     local_rank = 0
     world_size = 1
     device_ids = list(range(local_rank * num_gpus, (local_rank + 1) * num_gpus))
@@ -186,7 +186,7 @@ def main(
         
         device = torch.device("cuda:{}".format(local_rank))
         network = network.to(device)
-        ddp_network = torch.nn.parallel.DistributedDataParallel(network, device_ids=[local_rank], output_device=local_rank)
+        ddp_network = torch.nn.parallel.DistributedDataParallel(network, device_ids=device_ids, output_device=local_rank)
 
 
        
