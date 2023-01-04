@@ -20,7 +20,7 @@ def setup(rank, world_size):
     os.environ['MASTER_PORT'] = '12355'
 
     # initialize the process group
-    dist.init_process_group("gloo", rank=rank, world_size=world_size)
+    dist.init_process_group("nccl", rank=rank, world_size=world_size)
 
 def cleanup():
     dist.destroy_process_group()
@@ -173,7 +173,7 @@ def main(
     num_gpus = torch.cuda.device_count()
     print('Number of GPUs: ', num_gpus)
     local_rank = 0
-    world_size = 1
+    world_size = num_gpus
     device_ids = list(range(local_rank * num_gpus, (local_rank + 1) * num_gpus))
     
     print(f"Running DDP on rank {local_rank}.")
@@ -186,7 +186,7 @@ def main(
         
         device = torch.device("cuda:{}".format(local_rank))
         network = network.to(device)
-        ddp_network = torch.nn.parallel.DistributedDataParallel(network, device_ids=device_ids, output_device=local_rank)
+        ddp_network = torch.nn.parallel.DistributedDataParallel(network, device_ids=[local_rank], output_device=local_rank)
 
         loss = loss.to(device)
         loss_local_1 = loss_local_1.to(device)
