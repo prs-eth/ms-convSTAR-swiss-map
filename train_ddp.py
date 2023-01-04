@@ -132,7 +132,19 @@ def main(
     # Class stage mappping. 3 stages to use
     s1_2_s3 = traindataset.l1_2_g
     s2_2_s3 = traindataset.l2_2_g
-    traindataloader = torch.utils.data.DataLoader(traindataset, batch_size=batchsize, shuffle=True, num_workers=workers)
+
+
+    local_rank = 0
+    num_gpus = torch.cuda.device_count()
+    world_size = num_gpus
+    print('CUDA available: ', torch.cuda.is_available())
+    print('Number of GPUs: ', num_gpus)
+    print(f"Running DDP on rank {local_rank}.")
+    setup(local_rank, world_size)
+
+    sampler = DistributedSampler(traindataset, num_replicas=world_size, rank=rank, shuffle=False, drop_last=False)
+    traindataloader = torch.utils.data.DataLoader(traindataset, batch_size=batchsize, 
+    shuffle=True, num_workers=workers, sampler=sampler, pin_memory=True)
 
     # Define the model
     if cell == 'lstm':
@@ -168,16 +180,6 @@ def main(
     else:
         lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5, last_epoch=-1)
 
-
-    print('CUDA available: ', torch.cuda.is_available())
-    num_gpus = torch.cuda.device_count()
-    print('Number of GPUs: ', num_gpus)
-    local_rank = 0
-    world_size = num_gpus
-    device_ids = list(range(local_rank * num_gpus, (local_rank + 1) * num_gpus))
-    
-    print(f"Running DDP on rank {local_rank}.")
-    setup(local_rank, world_size)
 
     if torch.cuda.is_available():
         
