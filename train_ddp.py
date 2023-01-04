@@ -14,7 +14,6 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.multiprocessing as mp
 import torch.distributed as dist
 
-#yy
 
 def setup(rank, world_size):
     os.environ['MASTER_ADDR'] = 'localhost'
@@ -256,6 +255,13 @@ def train_epoch(dataloader, network, ddp_network, network_gt, optimizer, loss, l
             target_glob = target_glob.to(device)
             target_local_1 = target_local_1.to(device)
             target_local_2 = target_local_2.to(device)
+
+            print(input.get_device())
+            print(target_glob.get_device())
+            print(target_local_1.get_device())
+            print(target_local_2.get_device())
+            print(network.get_device())
+            print(ddp_network.get_device())
 
         output_glob, output_local_1, output_local_2 = ddp_network.forward(input)
 
