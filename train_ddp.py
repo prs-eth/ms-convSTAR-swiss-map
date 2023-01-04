@@ -257,14 +257,14 @@ def train_epoch(dataloader, network, ddp_network, network_gt, optimizer, loss, l
             target_local_2 = target_local_2.to(device)
 
         output_glob, output_local_1, output_local_2 = ddp_network.forward(input)
-
-            print(input.get_device())
-            print(target_glob.get_device())
-            print(target_local_1.get_device())
-            print(target_local_2.get_device())
-            print(output_local_1.get_device())
-            print(output_local_2.get_device())
-            print(output_glob.get_device())
+        
+        print(input.get_device())
+        print(target_glob.get_device())
+        print(target_local_1.get_device())
+        print(target_local_2.get_device())
+        print(output_local_1.get_device())
+        print(output_local_2.get_device())
+        print(output_glob.get_device())
 
 
         # NOTE no mask is passed and no loss is masked. the masking is supposed to be done before the training
