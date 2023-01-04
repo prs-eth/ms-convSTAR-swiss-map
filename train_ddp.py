@@ -188,7 +188,9 @@ def main(
         network = network.to(device)
         ddp_network = torch.nn.parallel.DistributedDataParallel(network, device_ids=device_ids, output_device=local_rank)
 
-
+        loss = loss.to(device)
+        loss_local_1 = loss_local_1.to(device)
+        loss_local_2 = loss_local_2.to(device)
        
     start_epoch = 0
     best_test_acc = 0

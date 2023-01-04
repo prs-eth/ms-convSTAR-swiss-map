@@ -34,7 +34,12 @@ def test(model, model_gt, dataloader, level=3):
         y_i = gt_instance.cpu().detach().numpy()
 
         z3, z1, z2 = model.forward(inputs)
-        z3_refined = model_gt([z1.detach(), z2.detach(), z3.detach()])
+
+        if model_gt is not None:
+            z3_refined = model_gt([z1.detach(), z2.detach(), z3.detach()])
+        else:
+            z3_refined = z3
+
 
         if type(z3_refined) == tuple:
             z3_refined = z3_refined[0]
@@ -122,7 +127,9 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=Fal
             os.makedirs(prediction_dir)
 
     model.eval()
-    model_gt.eval()
+
+    if model_gt is not None:
+        model_gt.eval()
 
     dataloader = torch.utils.data.DataLoader(dataset=dataset, batch_size=batchsize, num_workers=workers)
 
