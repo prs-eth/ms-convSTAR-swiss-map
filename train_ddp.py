@@ -211,7 +211,7 @@ def main(
         
         train_epoch(traindataloader, network, ddp_network, network_gt, optimizer, loss, loss_local_1, loss_local_2,
                     lambda_1=lambda_1, lambda_2=lambda_2, lambda_3=lambda_3, lambda_gt=lambda_gt, stage=stage, grad_clip=clip, step_count=step_count,
-                    device_ids=device_ids, device=device)
+                    device_ids=None, device=device)
 
         # call LR scheduler
         lr_scheduler.step()
