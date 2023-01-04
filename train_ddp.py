@@ -42,7 +42,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', "--data", type=str, default='/cluster/work/igp_psr/tmehmet/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
     parser.add_argument('-b', "--batchsize", default=4, type=int, help="batch size")
-    parser.add_argument('-w', "--workers", default=1, type=int, help="number of dataset worker threads")
+    parser.add_argument('-w', "--workers", default=8, type=int, help="number of dataset worker threads")
     parser.add_argument('-e', "--epochs", default=30, type=int, help="epochs to train")
     parser.add_argument('-l', "--learning_rate", default=0.001, type=float, help="learning rate")
     parser.add_argument('-s', "--snapshot", default=None,
