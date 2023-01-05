@@ -221,18 +221,23 @@ if __name__ == "__main__":
     mode = 'test'
     
     
-    datadir = '/cluster/work/igp_psr/tmehmet/S2_Raw_L2A_CH_2021_hdf5_train.hdf5'
+    #datadir = '/cluster/work/igp_psr/tmehmet/S2_Raw_L2A_CH_2021_hdf5_train.hdf5'
+    datadir = '/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train.hdf5'
+
+                
+    #data_canton_labels_dir = "/cluster/work/igp_psr/tmehmet/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json"
+    data_canton_labels_dir = "/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json"
+
     gt_path = 'GT_labels_19_21_GP.csv'
-    data_canton_labels_dir = "/cluster/work/igp_psr/tmehmet/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json"
     canton_ids_train = ["0", "3", "5", "14", "18", "19", "20", "25"]
 
     if mode == 'train':
         hdf_dataset = Dataset(datadir, 0., 'train', False, gt_path, num_channel=4, apply_cloud_masking=False, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train)
-        write_path =  '/cluster/work/igp_psr/tmehmet/swiss_crop_train.beton'
+        write_path =  '/scratch2/tmehmet/swiss_crop/swiss_crop_train.beton'
 
     else:
         hdf_dataset = Dataset(datadir, 0., 'test', True, gt_path, num_channel=4, apply_cloud_masking=False, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train)
-        write_path =  '/cluster/work/igp_psr/tmehmet/debug_swiss_crop_test.beton'
+        write_path =  '/scratch2/tmehmet/swiss_crop/debug_swiss_crop_test.beton'
 
 
 
