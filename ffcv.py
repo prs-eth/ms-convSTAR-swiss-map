@@ -3,7 +3,7 @@ import numpy as np
 import torch.utils.data
 import os, glob, json, csv
 import h5py
-from ffcv.ffcv.fields import NDArrayField, FloatField, IntField
+from ffcv.fields import NDArrayField, FloatField, IntField
 
 
 class Dataset(torch.utils.data.Dataset):
