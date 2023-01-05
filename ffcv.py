@@ -252,7 +252,7 @@ if __name__ == "__main__":
         'target_local_2': NDArrayField(t.shape[0],t.shape[1], dtype=np.dtype('long')),
         'gt_instance': NDArrayField(t.shape[0],t.shape[1], dtype=np.dtype('long')),   
 
-    }, num_workers=8)
+    }, num_workers=2)
 
 
     writer.from_indexed_dataset(hdf_dataset)
