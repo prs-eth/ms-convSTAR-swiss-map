@@ -177,7 +177,6 @@ class Dataset(torch.utils.data.Dataset):
             for k in self.data_canton_labels.keys():
                 if k not in self.canton_ids_train:
                     valid += self.data_canton_labels[k]
-        else:
 
         return np.array(valid)
 
