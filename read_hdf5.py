@@ -5,7 +5,7 @@ import h5py
 hf = h5py.File('/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', 'r')
 print(hf.keys())
 
-#<KeysViewHDF5 ['data', 'gt', 'gt_canton', 'gt_instance']>
+#<KeysViewHDF5 ['data', 'gt', 'gt_canton', 'gt_instance']> d
 
 data = hf.get('data')
 gt = hf.get('gt')
