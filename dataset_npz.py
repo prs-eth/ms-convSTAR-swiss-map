@@ -34,7 +34,7 @@ class Dataset(torch.utils.data.Dataset):
 
         valid_list_reduced = list()
         for i in range(self.valid_samples):
-            if os.path.isfile(self.npz_dir + str(i) + '.npz')
+            if os.path.isfile(self.npz_dir + str(i) + '.npz'):
                 valid_list_reduced.append(self.valid_list[i])
         
         self.valid_list = np.array(valid_list_reduced)
