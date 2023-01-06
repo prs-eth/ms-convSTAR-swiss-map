@@ -38,7 +38,7 @@ class Dataset(torch.utils.data.Dataset):
                 valid_list_reduced.append(self.valid_list[i])
         
         self.valid_list = np.array(valid_list_reduced)
-        print(valid_list)
+        print(self.valid_list)
 
         gt_path_ = './utils/' + gt_path        
         if not os.path.exists(gt_path_):
