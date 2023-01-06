@@ -118,7 +118,7 @@ def main(
     # Class stage mappping. 3 stages to use
     s1_2_s3 = traindataset.l1_2_g
     s2_2_s3 = traindataset.l2_2_g
-    traindataloader = torch.utils.data.DataLoader(traindataset, batch_size=batchsize, shuffle=True, num_workers=workers)
+    traindataloader = torch.utils.data.DataLoader(traindataset, batch_size=batchsize, shuffle=False, num_workers=workers)
 
     # Define the model
     if cell == 'lstm':
@@ -224,7 +224,7 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
     
     for iteration, data in enumerate(dataloader):
         optimizer.zero_grad()
-
+        print(iteration)
         input, target_glob, target_local_1, target_local_2 = data
 
         if torch.cuda.is_available():
