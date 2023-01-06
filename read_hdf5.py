@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import h5py
 
@@ -17,9 +18,10 @@ print(gt_canton.shape)
 
 num_samples = data.shape[0]
 outDir = '/scratch2/tmehmet/swiss_crop_samples/'
+os.mkdir(outDir)
 
-for i in range(10):
-    if i%2==0:
+for i in range(num_samples):
+    if i%1000==0:
         print('sammples: ',  i)
     outfile = outDir + str(i) + '.npz'
     x = data[i,...]
