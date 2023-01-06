@@ -18,7 +18,8 @@ print(gt_canton.shape)
 
 num_samples = data.shape[0]
 outDir = '/scratch2/tmehmet/swiss_crop_samples/'
-os.mkdir(outDir)
+if  not os.path.exists(outDir):
+    os.mkdir(outDir)
 
 offset  = 32000
 
