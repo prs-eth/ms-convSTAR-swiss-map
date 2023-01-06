@@ -32,6 +32,10 @@ class Dataset(torch.utils.data.Dataset):
         self.valid_list = self.get_valid_list(mode)
         self.valid_samples = self.valid_list.shape[0]
 
+        print(type(self.valid_list))
+        #for k in range(self.valid_samples):
+
+
         gt_path_ = './utils/' + gt_path        
         if not os.path.exists(gt_path_):
             gt_path_ = './'  + gt_path        
@@ -110,8 +114,6 @@ class Dataset(torch.utils.data.Dataset):
         print('Number of classes: ', self.n_classes)
         print('Number of classes - local-1: ', self.n_classes_local_1)
         print('Number of classes - local-2: ', self.n_classes_local_2)
-
-        print(self.valid_list)
 
         #for consistency loss---------------------------------------------------------
         self.l1_2_g = np.zeros(self.n_classes)
