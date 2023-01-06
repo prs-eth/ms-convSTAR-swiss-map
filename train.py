@@ -26,7 +26,7 @@ def parse_args():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', "--data", type=str, default='/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
-    parser.add_argument('-dn', "--npz_dir", type=str, default='/scratch2/tmehmet/swiss_crop_samplegs_debug/', help="path to dataset npz files")
+    parser.add_argument('-dn', "--npz_dir", type=str, default='/scratch2/tmehmet/swiss_crop_samples/', help="path to dataset npz files")
     parser.add_argument('-b', "--batchsize", default=4, type=int, help="batch size")
     parser.add_argument('-w', "--workers", default=8, type=int, help="number of dataset worker threads")
     parser.add_argument('-e', "--epochs", default=30, type=int, help="epochs to train")
