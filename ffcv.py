@@ -252,9 +252,9 @@ if __name__ == "__main__":
     writer = DatasetWriter(write_path, {
         'X': NDArrayField(shape=(X.shape[0],X.shape[1],X.shape[2],X.shape[3],), dtype=np.dtype('float32')),
         'target': NDArrayField(t.shape[0],t.shape[1],),
-        'target_local_1': NDArrayField(t.shape[0],t.shape[1], dtype=np.dtype('long')),
-        'target_local_2': NDArrayField(t.shape[0],t.shape[1], dtype=np.dtype('long')),
-        'gt_instance': NDArrayField(t.shape[0],t.shape[1], dtype=np.dtype('long')),   
+        'target_local_1': NDArrayField(t.shape[0],t.shape[1],), dtype=np.dtype('long')),
+        'target_local_2': NDArrayField(t.shape[0],t.shape[1],), dtype=np.dtype('long')),
+        'gt_instance': NDArrayField(t.shape[0],t.shape[1],), dtype=np.dtype('long')),   
 
     }, num_workers=2)
 
