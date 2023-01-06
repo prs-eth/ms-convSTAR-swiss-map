@@ -111,7 +111,7 @@ class Dataset(torch.utils.data.Dataset):
         print('Number of classes - local-1: ', self.n_classes_local_1)
         print('Number of classes - local-2: ', self.n_classes_local_2)
 
-        print(valid_list)
+        print(self.valid_list)
 
         #for consistency loss---------------------------------------------------------
         self.l1_2_g = np.zeros(self.n_classes)
