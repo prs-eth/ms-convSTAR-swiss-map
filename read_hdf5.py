@@ -19,8 +19,10 @@ num_samples = data.shape[0]
 outDir = '/scratch2/tmehmet/swiss_crop_samples/'
 
 for i in range(10):
+    if i%2==0:
+        print('sammples: ',  i)
     outfile = outDir + str(i) + '.npz'
-    X = data[i,...]
+    x = data[i,...]
     y = gt[i,:,:,0]
     yi = gt_instance[i,:,:,0]
     yc = gt_canton[i,:,:,0]
