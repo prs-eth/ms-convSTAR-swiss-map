@@ -6,6 +6,8 @@ print(hf.keys())
 
 #<KeysViewHDF5 ['data', 'gt', 'gt_canton', 'gt_instance']>
 
+data = hf.get('data')
+gt = hf.get('gt')
 print(data.shape)
 print(gt.shape)
 
