@@ -21,18 +21,23 @@ outDir = '/scratch2/tmehmet/swiss_crop_samples/'
 if  not os.path.exists(outDir):
     os.mkdir(outDir)
 
-offset  = 32000
+offset  = 33000
 
 for i in range(offset,num_samples):
     if i%1000==0:
         print('sammples: ',  i)
-    outfile = outDir + str(i) + '.npz'
-    x = data[i,...]
-    y = gt[i,:,:,0]
-    yi = gt_instance[i,:,:,0]
-    yc = gt_canton[i,:,:,0]
+
+    try:
+        x = data[i,...]
+        y = gt[i,:,:,0]
+        yi = gt_instance[i,:,:,0]
+        yc = gt_canton[i,:,:,0]
     
-    np.savez(outfile, x=x, y=y, yi=yi, yc=yc)
+        outfile = outDir + str(i) + '.npz'
+        np.savez(outfile, x=x, y=y, yi=yi, yc=yc)
+
+    except:
+        print('sample read error: ', i) 
 
 
 hf.close()
