@@ -8,7 +8,24 @@ print(hf.keys())
 
 data = hf.get('data')
 gt = hf.get('gt')
+gt_instance = hf.get('gt_instance')
+gt_canton = hf.get('gt_canton')
 print(data.shape)
 print(gt.shape)
+print(gt_instance.shape)
+print(gt_canton.shape)
+
+num_samples = data.shape[0]
+outDir = '/scratch2/tmehmet/swiss_crop_samples/'
+
+# for i in range(num_samples)
+#     outfile = outDir + str(i) + '.npz'
+#     X = data[i,...]
+#     y = gt[i,:,:,0]
+#     yi = gt_instance[i,:,:,0]
+#     yc = gt_canton[i,:,:,0]
+    
+#     np.savez(outfile, x=x, y=y, yi=yi, yc=yc)
+
 
 hf.close()
