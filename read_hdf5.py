@@ -17,10 +17,12 @@ print(gt_instance.shape)
 print(gt_canton.shape)
 
 num_samples = data.shape[0]
-outDir = '/scratch2/tmehmet/swiss_crop_samplegs_debug/'
+outDir = '/scratch2/tmehmet/swiss_crop_samples/'
 os.mkdir(outDir)
 
-for i in range(100):
+offset  = 32000
+
+for i in range(offset,num_samples):
     if i%1000==0:
         print('sammples: ',  i)
     outfile = outDir + str(i) + '.npz'

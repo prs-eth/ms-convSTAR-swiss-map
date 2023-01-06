@@ -26,6 +26,7 @@ def parse_args():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', "--data", type=str, default='/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
+    parser.add_argument('-dn', "--npz_dir", type=str, default='/scratch2/tmehmet/swiss_crop_samplegs_debug/', help="path to dataset npz files")
     parser.add_argument('-b', "--batchsize", default=4, type=int, help="batch size")
     parser.add_argument('-w', "--workers", default=8, type=int, help="number of dataset worker threads")
     parser.add_argument('-e', "--epochs", default=30, type=int, help="epochs to train")
@@ -69,6 +70,7 @@ class stepCount():
 
 def main(
         datadir=None,
+        npz_dir=None,
         data_canton_labels_dir=None,
         canton_ids_train=None,
         batchsize=1,
@@ -101,8 +103,10 @@ def main(
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
     
-    traindataset = Dataset(datadir, 0., 'train', False, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train)
-    testdataset = Dataset(datadir, 0., 'test', True, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train)
+    traindataset = Dataset(datadir, 0., 'train', False, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train,
+    npz_dir=npz_dir)
+    testdataset = Dataset(datadir, 0., 'test', True, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train,
+    npz_dir=npz_dir)
     
     nclasses = traindataset.n_classes
     nclasses_local_1 = traindataset.n_classes_local_1
@@ -118,7 +122,7 @@ def main(
     # Class stage mappping. 3 stages to use
     s1_2_s3 = traindataset.l1_2_g
     s2_2_s3 = traindataset.l2_2_g
-    traindataloader = torch.utils.data.DataLoader(testdataset, batch_size=batchsize, shuffle=False, num_workers=workers)
+    traindataloader = torch.utils.data.DataLoader(traindataset, batch_size=batchsize, shuffle=False, num_workers=workers)
 
     # Define the model
     if cell == 'lstm':
@@ -224,7 +228,6 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
     
     for iteration, data in enumerate(dataloader):
         optimizer.zero_grad()
-        print(iteration)
         input, target_glob, target_local_1, target_local_2 = data
 
         if torch.cuda.is_available():
@@ -309,6 +312,7 @@ if __name__ == "__main__":
     
     main(
         datadir=args.data,
+        npz_dir=args.npz_dir,
         data_canton_labels_dir=args.data_canton_labels,
         canton_ids_train=args.canton_ids_train,
         batchsize=args.batchsize,
