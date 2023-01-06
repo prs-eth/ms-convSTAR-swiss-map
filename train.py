@@ -5,7 +5,7 @@ torch.backends.cudnn.benchmark = False
 import torch.nn
 import argparse
 import os
-from dataset import Dataset
+from dataset_npz import Dataset
 from models.multi_stage_sequenceencoder import multistageSTARSequentialEncoder, multistageLSTMSequentialEncoder
 from models.networkConvRef import model_2DConv
 from eval import evaluate_fieldwise
@@ -25,7 +25,7 @@ def parse_args():
     All default values of these variables are those currently being used.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', "--data", type=str, default='/cluster/work/igp_psr/tmehmet/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
+    parser.add_argument('-d', "--data", type=str, default='/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
     parser.add_argument('-b', "--batchsize", default=4, type=int, help="batch size")
     parser.add_argument('-w', "--workers", default=8, type=int, help="number of dataset worker threads")
     parser.add_argument('-e', "--epochs", default=30, type=int, help="epochs to train")
@@ -54,7 +54,7 @@ def parse_args():
     parser.add_argument('-cm', "--apply_cm", default=False, type=bool, help="apply cloud masking")
     parser.add_argument('-pred', "--prediction_dir", default='predictions', type=str,help="directory to save predictions")
     parser.add_argument('-exp', "--experiment_id", default=0, type=int, help="times of running the experiment")
-    parser.add_argument('--data_canton_labels', default = "/cluster/work/igp_psr/tmehmet/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
+    parser.add_argument('--data_canton_labels', default = "/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
     parser.add_argument('--canton_ids_train', default = ["0", "3", "5", "14", "18", "19", "20", "25"], type=list, help="Canton ids to train")
 
     return parser.parse_args()
