@@ -112,6 +112,23 @@ class Dataset(torch.utils.data.Dataset):
         print('Number of classes - local-2: ', self.n_classes_local_2)
 
 
+        #for consistency loss---------------------------------------------------------
+        self.l1_2_g = np.zeros(self.n_classes)
+        self.l2_2_g = np.zeros(self.n_classes)
+        self.l1_2_l2 = np.zeros(self.n_classes_local_2)
+        
+        # label_list_glob (or label_list_l3) is the mapping of label_list (selected elements of column 'GT') to hier4 labels
+        for i in range(1,self.n_classes):
+            if i in self.label_list_glob:
+                self.l1_2_g[i] = self.label_list_local_1[self.label_list_glob.index(i)]
+                self.l2_2_g[i] = self.label_list_local_2[self.label_list_glob.index(i)]
+        # if the class is not in label_list, then the corresponding l1 mapping here is 0 (parent class 'unknown')
+        for i in range(1,self.n_classes_local_2):
+            if i in self.label_list_local_2:
+            
+                self.l1_2_l2[i] = self.label_list_local_1[self.label_list_local_2.index(i)]
+
+
         #Close the hdf5 file
         self.data.close()
 
