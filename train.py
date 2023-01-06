@@ -118,7 +118,7 @@ def main(
     # Class stage mappping. 3 stages to use
     s1_2_s3 = traindataset.l1_2_g
     s2_2_s3 = traindataset.l2_2_g
-    traindataloader = torch.utils.data.DataLoader(traindataset, batch_size=batchsize, shuffle=False, num_workers=workers)
+    traindataloader = torch.utils.data.DataLoader(testdataset, batch_size=batchsize, shuffle=False, num_workers=workers)
 
     # Define the model
     if cell == 'lstm':
