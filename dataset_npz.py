@@ -218,7 +218,7 @@ class Dataset(torch.utils.data.Dataset):
                 return X.float(), target.long(), target_local_1.long(), target_local_2.long()
         
         except Exception as e:
-            print e
+            print(e)
 
     def get_valid_list(self, mode):
         valid = []
