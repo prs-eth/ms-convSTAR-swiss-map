@@ -211,16 +211,14 @@ class Dataset(torch.utils.data.Dataset):
                 target_local_1 = target_local_1.flip(0,1)  
                 target_local_2 = target_local_2.flip(0,1)
 
-        if self.return_cloud_cover:
-            if self.eval_mode:
-                return X.float(), target.long(), target_local_1.long(), target_local_2.long(), gt_instance.long(), CC.float()
-            else:
-                return X.float(), target.long(), target_local_1.long(), target_local_2.long(), CC.float()
-        else:
+        try:
             if self.eval_mode:
                 return X.float(), target.long(), target_local_1.long(), target_local_2.long(), gt_instance.long()
             else:
                 return X.float(), target.long(), target_local_1.long(), target_local_2.long()
+        
+        except Exception as e:
+            print e
 
     def get_valid_list(self, mode):
         valid = []
