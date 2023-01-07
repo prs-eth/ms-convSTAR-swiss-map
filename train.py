@@ -57,6 +57,7 @@ def parse_args():
     parser.add_argument('-exp', "--experiment_id", default=0, type=int, help="times of running the experiment")
     parser.add_argument('--data_canton_labels', default = "/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
     parser.add_argument('--canton_ids_train', default = ["0", "3", "5", "14", "18", "19", "20", "25"], type=list, help="Canton ids to train")
+    parser.add_argument('-wdb', "--wandb_enable", default=True, type=bool, help="wandb")
 
     return parser.parse_args()
 
@@ -97,7 +98,8 @@ def main(
         cell=None,
         dropout=None,
         input_dim=None,
-        apply_cm=None
+        apply_cm=None,
+        wandb_enable=False
 ):
     checkpoint_dir = f"{checkpoint_dir}_{experiment_id}"
     if not os.path.exists(checkpoint_dir):
@@ -189,7 +191,8 @@ def main(
         print("\nEpoch {}".format(epoch+1))
         
         train_epoch(traindataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2,
-                    lambda_1=lambda_1, lambda_2=lambda_2, lambda_3=lambda_3, lambda_gt=lambda_gt, stage=stage, grad_clip=clip, step_count=step_count)
+                    lambda_1=lambda_1, lambda_2=lambda_2, lambda_3=lambda_3, lambda_gt=lambda_gt, stage=stage, grad_clip=clip, step_count=step_count,
+                    wandb_enable=wandb_enable)
 
         # call LR scheduler
         lr_scheduler.step()
@@ -199,7 +202,8 @@ def main(
             print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
             test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
             
-            #wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
+            if wandb_enable:
+                wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
             
             if checkpoint_dir is not None:
                 checkpoint_name = os.path.join(checkpoint_dir, name + '_epoch_' + str(epoch) + "_model.pth")
@@ -210,12 +214,13 @@ def main(
                                 'network_gt_state_dict': network_gt.state_dict(),
                                 'optimizerA_state_dict': optimizer.state_dict()}, checkpoint_name)
                     
-                    #wandb.summary["best val acc"] = test_acc
-                    #wandb.summary["best epoch"] = epoch
+                    if wandb_enable:
+                        wandb.summary["best val acc"] = test_acc
+                        wandb.summary["best epoch"] = epoch
 
 
 def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2, lambda_1,
-                lambda_2, lambda_3, lambda_gt, stage, grad_clip, step_count):
+                lambda_2, lambda_3, lambda_gt, stage, grad_clip, step_count, wandb_enable):
 
     network.train()
     network_gt.train()
@@ -273,8 +278,10 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
                             "train_step/local_loss_2": l_local_2,
                             "train_step/global_loss": l_glob,
                             "train_step/global_loss_refined": l_gt}
-        #wandb.log(metrics_per_step, step=step_count.step)
-        print("step:", step_count.step, "total_loss: %.4f"%(total_loss.data.cpu().numpy()))
+        if wandb_enable:
+            wandb.log(metrics_per_step, step=step_count.step)
+        if step_count.step%1000 == 0:
+            print("step:", step_count.step, "total_loss: %.4f"%(total_loss.data.cpu().numpy()))
         step_count.count()
 
     mean_loss_local_1 /= (iteration+1)
@@ -293,7 +300,8 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
                         "train_epoch/local_loss_2": mean_loss_local_2,
                         "train_epoch/global_loss": mean_loss_glob,
                         "train_epoch/global_loss_refined": mean_loss_gt}
-    #wandb.log(metrics_per_epoch, step = step_count.step-1)
+    if wandb_enable:
+        wandb.log(metrics_per_epoch, step = step_count.step-1)
 
 if __name__ == "__main__":
     args = parse_args()
@@ -308,7 +316,8 @@ if __name__ == "__main__":
 
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    #wandb.init(project='ms_convSTAR_CH_2021', entity='yihshe', name=f'experiment_{args.experiment_id}',config=args)
+    if wandb_enable:
+        wandb.init(project='swiss_crop', entity='tmehmet', name=f'experiment_{args.experiment_id}',config=args)
     
     main(
         datadir=args.data,
@@ -339,6 +348,8 @@ if __name__ == "__main__":
         cell=args.cell,
         dropout=args.dropout,
         input_dim=args.input_dim,
-        apply_cm = args.apply_cm
+        apply_cm = args.apply_cm,
+        wandb_enable = args.wandb_enable
     )
-    #wandb.finish()
+    if wandb_enable:
+        wandb.finish()
