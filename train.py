@@ -317,7 +317,7 @@ if __name__ == "__main__":
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     if args.wandb_enable:
-        wandb.init(project='swiss_crop', entity='tmehmet', name=f'experiment_{args.experiment_id}',config=args)
+        wandb.init(project='swiss_crop', entity='ozgur', name=f'experiment_{args.experiment_id}',config=args)
     
     main(
         datadir=args.data,
