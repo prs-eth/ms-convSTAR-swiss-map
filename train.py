@@ -27,19 +27,19 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', "--data", type=str, default='/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
     parser.add_argument('-dn', "--npz_dir", type=str, default='/scratch2/tmehmet/swiss_crop_samples/', help="path to dataset npz files")
-    parser.add_argument('-b', "--batchsize", default=64, type=int, help="batch size")
+    parser.add_argument('-b', "--batchsize", default=32, type=int, help="batch size")
     parser.add_argument('-w', "--workers", default=12, type=int, help="number of dataset worker threads")
     parser.add_argument('-e', "--epochs", default=30, type=int, help="epochs to train")
     parser.add_argument('-l', "--learning_rate", default=0.001, type=float, help="learning rate")
     parser.add_argument('-s', "--snapshot", default=None,
                         type=str, help="load weights from snapshot")
-    parser.add_argument('-c', "--checkpoint_dir", default='trained_models',
+    parser.add_argument('-c', "--checkpoint_dir", default='/scratch2/tmehmet/swiss_crop_model',
                         type=str,help="directory to save checkpoints")
     parser.add_argument('-wd', "--weight_decay", default=0.0001, type=float, help="weight_decay")
     parser.add_argument('-hd', "--hidden", default=64, type=int, help="hidden dim")
     parser.add_argument('-nl', "--layer", default=6, type=int, help="num layer")
     parser.add_argument('-lrs', "--lrSC", default=2, type=int, help="lrScheduler")
-    parser.add_argument('-nm', "--name", default='msConvSTAR', type=str, help="name")
+    parser.add_argument('-nm', "--name", default='swiss_map', type=str, help="name")
     parser.add_argument('-l1', "--lambda_1", default=0.1, type=float, help="lambda_1")
     parser.add_argument('-l2', "--lambda_2", default=0.3, type=float, help="lambda_2")
     parser.add_argument('-l3', "--lambda_3", default=0.6, type=float, help="lambda_3")
