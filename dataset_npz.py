@@ -31,6 +31,7 @@ class Dataset(torch.utils.data.Dataset):
         # return the patch indices depending on the mode "train" or "test"
         self.valid_list = self.get_valid_list(mode)
         self.valid_samples = self.valid_list.shape[0]
+        print('Num valid samples: ', self.valid_samples)
 
         valid_list_reduced = list()
         for i in range(self.valid_samples):
@@ -38,7 +39,9 @@ class Dataset(torch.utils.data.Dataset):
                 valid_list_reduced.append(self.valid_list[i])
         
         self.valid_list = np.array(valid_list_reduced)
-        print(self.valid_list)
+        self.valid_samples = self.valid_list.shape[0]
+        print('Num valid samples: ', self.valid_samples)
+
 
         gt_path_ = './utils/' + gt_path        
         if not os.path.exists(gt_path_):
