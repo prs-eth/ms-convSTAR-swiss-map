@@ -58,7 +58,7 @@ def parse_args():
     parser.add_argument('--data_canton_labels', default = "/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
     parser.add_argument('--canton_ids_train', default = ["0", "3", "5", "14", "18", "19", "20", "25"], type=list, help="Canton ids to train")
     parser.add_argument('-wdb', "--wandb_enable", default=True, type=bool, help="wandb")
-    parser.add_argument('-e', "--eval", action='store_true', help="eval mode")
+    parser.add_argument('-ev', "--eval", action='store_true', help="eval mode")
 
     return parser.parse_args()
 
