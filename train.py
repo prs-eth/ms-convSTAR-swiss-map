@@ -58,6 +58,7 @@ def parse_args():
     parser.add_argument('--data_canton_labels', default = "/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
     parser.add_argument('--canton_ids_train', default = ["0", "3", "5", "14", "18", "19", "20", "25"], type=list, help="Canton ids to train")
     parser.add_argument('-wdb', "--wandb_enable", default=True, type=bool, help="wandb")
+    parser.add_argument('-e', "--eval", action='store_true', help="eval mode")
 
     return parser.parse_args()
 
@@ -99,7 +100,8 @@ def main(
         dropout=None,
         input_dim=None,
         apply_cm=None,
-        wandb_enable=False
+        wandb_enable=False,
+        eval_mode=False
 ):
     checkpoint_dir = f"{checkpoint_dir}_{experiment_id}"
     if not os.path.exists(checkpoint_dir):
@@ -186,37 +188,44 @@ def main(
         network_gt.load_state_dict(checkpoint['network_gt_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizerA_state_dict'])
 
-    step_count = stepCount(init_step=0)
-    for epoch in range(start_epoch, epochs):
-        print("\nEpoch {}".format(epoch+1))
-        
-        train_epoch(traindataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2,
-                    lambda_1=lambda_1, lambda_2=lambda_2, lambda_3=lambda_3, lambda_gt=lambda_gt, stage=stage, grad_clip=clip, step_count=step_count,
-                    wandb_enable=wandb_enable)
-
-        # call LR scheduler
-        lr_scheduler.step()
-
-        # evaluate model
-        if epoch > 1 and epoch % 1 == 0:
-            print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
-            test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
+    if eval_mode:
+         print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
+        test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
+                
+    else:
+        step_count = stepCount(init_step=0)
+        for epoch in range(start_epoch, epochs):
+            print("\nEpoch {}".format(epoch+1))
             
-            if wandb_enable:
-                wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
-            
-            if checkpoint_dir is not None:
-                checkpoint_name = os.path.join(checkpoint_dir, name + '_epoch_' + str(epoch) + "_model.pth")
-                if test_acc > best_test_acc:
-                    print('Model saved! Best val acc:', test_acc)
-                    best_test_acc = test_acc
-                    torch.save({'network_state_dict': network.state_dict(),
-                                'network_gt_state_dict': network_gt.state_dict(),
-                                'optimizerA_state_dict': optimizer.state_dict()}, checkpoint_name)
-                    
-                    if wandb_enable:
-                        wandb.summary["best val acc"] = test_acc
-                        wandb.summary["best epoch"] = epoch
+            train_epoch(traindataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2,
+                        lambda_1=lambda_1, lambda_2=lambda_2, lambda_3=lambda_3, lambda_gt=lambda_gt, stage=stage, grad_clip=clip, step_count=step_count,
+                        wandb_enable=wandb_enable)
+
+            # call LR scheduler
+            lr_scheduler.step()
+
+            # evaluate model
+            if epoch > -1 and epoch % 1 == 0:
+                print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
+                test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
+                
+                if wandb_enable:
+                    wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
+                
+                if checkpoint_dir is not None:
+                    checkpoint_name = os.path.join(checkpoint_dir, name + '_epoch_' + str(epoch) + "_model.pth")
+                    if test_acc > best_test_acc:
+                        print('Model saved! Best val acc:', test_acc)
+                        best_test_acc = test_acc
+                        torch.save({'network_state_dict': network.state_dict(),
+                                    'network_gt_state_dict': network_gt.state_dict(),
+                                    'optimizerA_state_dict': optimizer.state_dict()}, checkpoint_name)
+                        
+                        if wandb_enable:
+                            wandb.summary["best val acc"] = test_acc
+                            wandb.summary["best epoch"] = epoch
+
+
 
 
 def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, loss_local_2, lambda_1,
@@ -349,7 +358,8 @@ if __name__ == "__main__":
         dropout=args.dropout,
         input_dim=args.input_dim,
         apply_cm = args.apply_cm,
-        wandb_enable = args.wandb_enable
+        wandb_enable = args.wandb_enable,
+        eval_mode = args.eval
     )
     if wandb_enable:
         wandb.finish()
