@@ -152,74 +152,74 @@ class Dataset(torch.utils.data.Dataset):
         
         try:
             data = np.load(self.npz_dir + str(idx) + '.npz')
-            
-            X = data['x']
-            target_ = data['y']
-            if self.eval_mode: #it seems that for evaluation, we do not need to return 'gt_canton'
-                gt_instance = data['yi']
+        except:
+            data = np.load(self.npz_dir + str(0) + '.npz')
 
-            X = np.transpose(X, (0, 3, 1, 2))
+        X = data['x']
+        target_ = data['y']
+        if self.eval_mode: #it seems that for evaluation, we do not need to return 'gt_canton'
+            gt_instance = data['yi']
 
-            #Change labels 
-            target = np.zeros_like(target_)
-            target_local_1 = np.zeros_like(target_)
-            target_local_2 = np.zeros_like(target_)
-            
-            #here only the classes in label_list (Vegetation and hier4 is not none) get mapped. Other classes in target_ including no-data value 9999999 are not mapped (corresponding value in target is 0)
-            #use the inversed mapping to map the predictions back to code
-            for i, code in enumerate(list(self.label_list.values())):  
-                target[target_ == code] = self.label_list_glob[i]
-                target_local_1[target_ == code] = self.label_list_local_1[i]
-                target_local_2[target_ == code] = self.label_list_local_2[i]
-            
-            X = torch.from_numpy(X)
-            target = torch.from_numpy(target).float()
-            target_local_1 = torch.from_numpy(target_local_1).float()
-            target_local_2 = torch.from_numpy(target_local_2).float()
+        X = np.transpose(X, (0, 3, 1, 2))
 
-            if self.apply_cloud_masking or self.return_cloud_cover:
-                CC = torch.from_numpy(CC).float()
-
-            if self.eval_mode:
-                gt_instance = torch.from_numpy(gt_instance).float()
-
-            #keep values between 0-1
-            X = X * 1e-4
-            #Previous line should be modified as X = X / 4095 but not tested yet!
-
-            # Cloud masking
-            if self.apply_cloud_masking:
-                CC_mask = CC < self.cloud_threshold
-                CC_mask = CC_mask.view(CC_mask.shape[0],1,CC_mask.shape[1],CC_mask.shape[2])
-                X = X * CC_mask.float()
-
-            #augmentation
-            if self.eval_mode==False and np.random.rand() < self.augment_rate:
-                flip_dir  = np.random.randint(3)
-                if flip_dir == 0:
-                    X = X.flip(2)
-                    target = target.flip(0)
-                    target_local_1 = target_local_1.flip(0)
-                    target_local_2 = target_local_2.flip(0)
-                elif flip_dir == 1:
-                    X = X.flip(3)
-                    target = target.flip(1)
-                    target_local_1 = target_local_1.flip(1)
-                    target_local_2 = target_local_2.flip(1)
-                elif flip_dir == 2:
-                    X = X.flip(2,3)
-                    target = target.flip(0,1)  
-                    target_local_1 = target_local_1.flip(0,1)  
-                    target_local_2 = target_local_2.flip(0,1)
-
-            
-            if self.eval_mode:
-                return X.float(), target.long(), target_local_1.long(), target_local_2.long(), gt_instance.long()
-            else:
-                return X.float(), target.long(), target_local_1.long(), target_local_2.long()
+        #Change labels 
+        target = np.zeros_like(target_)
+        target_local_1 = np.zeros_like(target_)
+        target_local_2 = np.zeros_like(target_)
         
-        except Exception as e:
-            print(e)
+        #here only the classes in label_list (Vegetation and hier4 is not none) get mapped. Other classes in target_ including no-data value 9999999 are not mapped (corresponding value in target is 0)
+        #use the inversed mapping to map the predictions back to code
+        for i, code in enumerate(list(self.label_list.values())):  
+            target[target_ == code] = self.label_list_glob[i]
+            target_local_1[target_ == code] = self.label_list_local_1[i]
+            target_local_2[target_ == code] = self.label_list_local_2[i]
+        
+        X = torch.from_numpy(X)
+        target = torch.from_numpy(target).float()
+        target_local_1 = torch.from_numpy(target_local_1).float()
+        target_local_2 = torch.from_numpy(target_local_2).float()
+
+        if self.apply_cloud_masking or self.return_cloud_cover:
+            CC = torch.from_numpy(CC).float()
+
+        if self.eval_mode:
+            gt_instance = torch.from_numpy(gt_instance).float()
+
+        #keep values between 0-1
+        X = X * 1e-4
+        #Previous line should be modified as X = X / 4095 but not tested yet!
+
+        # Cloud masking
+        if self.apply_cloud_masking:
+            CC_mask = CC < self.cloud_threshold
+            CC_mask = CC_mask.view(CC_mask.shape[0],1,CC_mask.shape[1],CC_mask.shape[2])
+            X = X * CC_mask.float()
+
+        #augmentation
+        if self.eval_mode==False and np.random.rand() < self.augment_rate:
+            flip_dir  = np.random.randint(3)
+            if flip_dir == 0:
+                X = X.flip(2)
+                target = target.flip(0)
+                target_local_1 = target_local_1.flip(0)
+                target_local_2 = target_local_2.flip(0)
+            elif flip_dir == 1:
+                X = X.flip(3)
+                target = target.flip(1)
+                target_local_1 = target_local_1.flip(1)
+                target_local_2 = target_local_2.flip(1)
+            elif flip_dir == 2:
+                X = X.flip(2,3)
+                target = target.flip(0,1)  
+                target_local_1 = target_local_1.flip(0,1)  
+                target_local_2 = target_local_2.flip(0,1)
+
+        
+        if self.eval_mode:
+            return X.float(), target.long(), target_local_1.long(), target_local_2.long(), gt_instance.long()
+        else:
+            return X.float(), target.long(), target_local_1.long(), target_local_2.long()
+        
 
     def get_valid_list(self, mode):
         valid = []
