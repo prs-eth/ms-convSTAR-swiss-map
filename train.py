@@ -206,7 +206,7 @@ def main(
             lr_scheduler.step()
 
             # evaluate model
-            if epoch > -1 and epoch % 1 == 0:
+            if epoch > 1 and epoch % 1 == 0:
                 print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
                 test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
                 
