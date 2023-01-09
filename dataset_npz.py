@@ -118,7 +118,7 @@ class Dataset(torch.utils.data.Dataset):
         print('Valid dataset size: ', self.valid_samples)
         print('Sequence length: ', self.max_obs)
         print('Spatial size: ', self.spatial)
-        print('Number of classes: ', self.n_classes)
+        print('Number of classes: ', len(self.label_list_glob))
         print('Number of classes - local-1: ', self.n_classes_local_1)
         print('Number of classes - local-2: ', self.n_classes_local_2)
 
