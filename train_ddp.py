@@ -5,15 +5,16 @@ torch.backends.cudnn.benchmark = False
 import torch.nn
 import argparse
 import os
-from dataset import Dataset
+from dataset_npz import Dataset
 from models.multi_stage_sequenceencoder import multistageSTARSequentialEncoder, multistageLSTMSequentialEncoder
 from models.networkConvRef import model_2DConv
 from eval import evaluate_fieldwise
 import wandb
 from torch.nn.parallel import DistributedDataParallel as DDP
-import torch.multiprocessing as mp
 import torch.distributed as dist
 from torch.utils.data.distributed import DistributedSampler
+import torch.multiprocessing as mp
+mp.set_sharing_strategy('file_system')
 
 
 def setup(rank, world_size):
@@ -40,20 +41,21 @@ def parse_args():
     All default values of these variables are those currently being used.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', "--data", type=str, default='/cluster/work/igp_psr/tmehmet/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
-    parser.add_argument('-b', "--batchsize", default=4, type=int, help="batch size")
-    parser.add_argument('-w', "--workers", default=8, type=int, help="number of dataset worker threads")
+    parser.add_argument('-d', "--data", type=str, default='/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
+    parser.add_argument('-dn', "--npz_dir", type=str, default='/scratch2/tmehmet/swiss_crop_samples/', help="path to dataset npz files")
+    parser.add_argument('-b', "--batchsize", default=32, type=int, help="batch size")
+    parser.add_argument('-w', "--workers", default=12, type=int, help="number of dataset worker threads")
     parser.add_argument('-e', "--epochs", default=30, type=int, help="epochs to train")
     parser.add_argument('-l', "--learning_rate", default=0.001, type=float, help="learning rate")
     parser.add_argument('-s', "--snapshot", default=None,
                         type=str, help="load weights from snapshot")
-    parser.add_argument('-c', "--checkpoint_dir", default='trained_models',
+    parser.add_argument(   '-c', "--checkpoint_dir", default='/scratch2/tmehmet/swiss_crop_model',
                         type=str,help="directory to save checkpoints")
     parser.add_argument('-wd', "--weight_decay", default=0.0001, type=float, help="weight_decay")
     parser.add_argument('-hd', "--hidden", default=64, type=int, help="hidden dim")
     parser.add_argument('-nl', "--layer", default=6, type=int, help="num layer")
     parser.add_argument('-lrs', "--lrSC", default=2, type=int, help="lrScheduler")
-    parser.add_argument('-nm', "--name", default='msConvSTAR', type=str, help="name")
+    parser.add_argument('-nm', "--name", default='swiss_map', type=str, help="name")
     parser.add_argument('-l1', "--lambda_1", default=0.1, type=float, help="lambda_1")
     parser.add_argument('-l2', "--lambda_2", default=0.3, type=float, help="lambda_2")
     parser.add_argument('-l3', "--lambda_3", default=0.6, type=float, help="lambda_3")
@@ -69,9 +71,10 @@ def parse_args():
     parser.add_argument('-cm', "--apply_cm", default=False, type=bool, help="apply cloud masking")
     parser.add_argument('-pred', "--prediction_dir", default='predictions', type=str,help="directory to save predictions")
     parser.add_argument('-exp', "--experiment_id", default=0, type=int, help="times of running the experiment")
-    parser.add_argument('--data_canton_labels', default = "/cluster/work/igp_psr/tmehmet/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
+    parser.add_argument('--data_canton_labels', default = "/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
     parser.add_argument('--canton_ids_train', default = ["0", "3", "5", "14", "18", "19", "20", "25"], type=list, help="Canton ids to train")
-
+    parser.add_argument('-wdb', "--wandb_enable", default=True, type=bool, help="wandb")
+    parser.add_argument('-ev', "--eval", action='store_true', help="eval mode")
     return parser.parse_args()
 
 class stepCount():
@@ -116,9 +119,11 @@ def main(
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
     
-    traindataset = Dataset(datadir, 0., 'train', False, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train)
-    testdataset = Dataset(datadir, 0., 'test', True, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train)
-    
+    traindataset = Dataset(datadir, 0., 'train', False, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train,
+    npz_dir=npz_dir)
+    testdataset = Dataset(datadir, 0., 'test', True, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train,
+    npz_dir=npz_dir)
+
     nclasses = traindataset.n_classes
     nclasses_local_1 = traindataset.n_classes_local_1
     nclasses_local_2 = traindataset.n_classes_local_2
@@ -347,6 +352,7 @@ if __name__ == "__main__":
     
     main(
         datadir=args.data,
+        npz_dir=args.npz_dir,
         data_canton_labels_dir=args.data_canton_labels,
         canton_ids_train=args.canton_ids_train,
         batchsize=args.batchsize,
@@ -373,6 +379,7 @@ if __name__ == "__main__":
         cell=args.cell,
         dropout=args.dropout,
         input_dim=args.input_dim,
-        apply_cm = args.apply_cm
+        apply_cm = args.apply_cm,
+        wandb_enable = args.wandb_enable,
+        eval_mode = args.eval
     )
-    #wandb.finish()
