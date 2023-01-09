@@ -7,6 +7,8 @@ import torch.optim
 from tqdm import tqdm
 import numpy as np
 from sklearn.metrics import confusion_matrix as sklearn_cm
+import torch.multiprocessing
+torch.multiprocessing.set_sharing_strategy('file_system')
 
 def test(model, model_gt, dataloader, level=3):
     model.eval()
@@ -118,7 +120,7 @@ def print_report(overall_accuracy, kappa, precision, recall, f1, cl_acc):
     return cl_acc
 
 
-def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=8, viz=False, prediction_dir = None, experiment_id = 0, fold_num=5, level=3,
+def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=False, prediction_dir = None, experiment_id = 0, fold_num=5, level=3,
                         ignore_undefined_classes=False):
 
     if prediction_dir != None:
