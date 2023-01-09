@@ -205,6 +205,16 @@ def main(
             # call LR scheduler
             lr_scheduler.step()
 
+            #save model
+            if checkpoint_dir is not None:
+                    checkpoint_name = os.path.join(checkpoint_dir, name + '_epoch_' + str(epoch) + "_model.pth")
+                    print('Model saved! Best val acc:', test_acc)
+                    best_test_acc = test_acc
+                    torch.save({'network_state_dict': network.state_dict(),
+                                'network_gt_state_dict': network_gt.state_dict(),
+                                'optimizerA_state_dict': optimizer.state_dict()}, checkpoint_name)
+
+
             # evaluate model
             if epoch > 1 and epoch % 1 == 0:
                 print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
@@ -212,15 +222,6 @@ def main(
                 
                 if wandb_enable:
                     wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
-                
-                if checkpoint_dir is not None:
-                    checkpoint_name = os.path.join(checkpoint_dir, name + '_epoch_' + str(epoch) + "_model.pth")
-                    if test_acc > best_test_acc:
-                        print('Model saved! Best val acc:', test_acc)
-                        best_test_acc = test_acc
-                        torch.save({'network_state_dict': network.state_dict(),
-                                    'network_gt_state_dict': network_gt.state_dict(),
-                                    'optimizerA_state_dict': optimizer.state_dict()}, checkpoint_name)
                         
                         if wandb_enable:
                             wandb.summary["best val acc"] = test_acc
