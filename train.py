@@ -223,9 +223,9 @@ def main(
                 if wandb_enable:
                     wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
                         
-                        if wandb_enable:
-                            wandb.summary["best val acc"] = test_acc
-                            wandb.summary["best epoch"] = epoch
+                if wandb_enable:
+                    wandb.summary["best val acc"] = test_acc
+                    wandb.summary["best epoch"] = epoch
 
 
 
