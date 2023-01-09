@@ -192,7 +192,8 @@ def main(
     if eval_mode:
         print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
         test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
-                
+        print('Model saved! Best val acc:', test_acc)
+
     else:
         step_count = stepCount(init_step=0)
         for epoch in range(start_epoch, epochs):
@@ -208,8 +209,7 @@ def main(
             #save model
             if checkpoint_dir is not None:
                     checkpoint_name = os.path.join(checkpoint_dir, name + '_epoch_' + str(epoch) + "_model.pth")
-                    print('Model saved! Best val acc:', test_acc)
-                    best_test_acc = test_acc
+                    #best_test_acc = test_acc
                     torch.save({'network_state_dict': network.state_dict(),
                                 'network_gt_state_dict': network_gt.state_dict(),
                                 'optimizerA_state_dict': optimizer.state_dict()}, checkpoint_name)
@@ -219,7 +219,8 @@ def main(
             if epoch > 1 and epoch % 1 == 0:
                 print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
                 test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
-                
+                print('Model saved! Best val acc:', test_acc)
+
                 if wandb_enable:
                     wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
                         
