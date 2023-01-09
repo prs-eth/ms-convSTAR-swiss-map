@@ -9,7 +9,7 @@ from dataset_npz import Dataset
 from models.multi_stage_sequenceencoder import multistageSTARSequentialEncoder, multistageLSTMSequentialEncoder
 from models.networkConvRef import model_2DConv
 from eval import evaluate_fieldwise
-import wandb
+#import wandb
 import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
 
@@ -58,7 +58,7 @@ def parse_args():
     parser.add_argument('-exp', "--experiment_id", default=0, type=int, help="times of running the experiment")
     parser.add_argument('--data_canton_labels', default = "/cluster/work/igp_psr/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
     parser.add_argument('--canton_ids_train', default = ["0", "3", "5", "14", "18", "19", "20", "25"], type=list, help="Canton ids to train")
-    parser.add_argument('-wdb', "--wandb_enable", default=True, type=bool, help="wandb")
+    parser.add_argument('-wdb', "--wandb_enable", default=False, type=bool, help="wandb")
     parser.add_argument('-ev', "--eval", action='store_true', help="eval mode")
 
     return parser.parse_args()
@@ -220,12 +220,12 @@ def main(
                 test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
                 print('Model saved! Best val acc:', test_acc)
 
-                if wandb_enable:
-                    wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
+                # if wandb_enable:
+                #     wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
                         
-                if wandb_enable:
-                    wandb.summary["best val acc"] = test_acc
-                    wandb.summary["best epoch"] = epoch
+                # if wandb_enable:
+                #     wandb.summary["best val acc"] = test_acc
+                #     wandb.summary["best epoch"] = epoch
 
 
 
@@ -289,8 +289,8 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
                             "train_step/local_loss_2": l_local_2,
                             "train_step/global_loss": l_glob,
                             "train_step/global_loss_refined": l_gt}
-        if wandb_enable:
-            wandb.log(metrics_per_step, step=step_count.step)
+        # if wandb_enable:
+        #     wandb.log(metrics_per_step, step=step_count.step)
         if step_count.step%1000 == 0:
             print("step:", step_count.step, "total_loss: %.4f"%(total_loss.data.cpu().numpy()))
         step_count.count()
@@ -311,8 +311,8 @@ def train_epoch(dataloader, network, network_gt, optimizer, loss, loss_local_1, 
                         "train_epoch/local_loss_2": mean_loss_local_2,
                         "train_epoch/global_loss": mean_loss_glob,
                         "train_epoch/global_loss_refined": mean_loss_gt}
-    if wandb_enable:
-        wandb.log(metrics_per_epoch, step = step_count.step-1)
+    # if wandb_enable:
+    #     wandb.log(metrics_per_epoch, step = step_count.step-1)
 
 if __name__ == "__main__":
     args = parse_args()
@@ -327,8 +327,8 @@ if __name__ == "__main__":
 
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    if args.wandb_enable:
-        wandb.init(project='swiss_crop', entity='ozgur', name=f'experiment_{args.experiment_id}',config=args)
+    # if args.wandb_enable:
+    #     wandb.init(project='swiss_crop', entity='ozgur', name=f'experiment_{args.experiment_id}',config=args)
     
     main(
         datadir=args.data,
@@ -363,5 +363,5 @@ if __name__ == "__main__":
         wandb_enable = args.wandb_enable,
         eval_mode = args.eval
     )
-    if wandb_enable:
-        wandb.finish()
+    # if wandb_enable:
+    #     wandb.finish()
