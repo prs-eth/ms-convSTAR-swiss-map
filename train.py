@@ -10,7 +10,8 @@ from models.multi_stage_sequenceencoder import multistageSTARSequentialEncoder, 
 from models.networkConvRef import model_2DConv
 from eval import evaluate_fieldwise
 import wandb
-
+import torch.multiprocessing
+torch.multiprocessing.set_sharing_strategy('file_system')
 
 def parse_args():
     """
