@@ -214,18 +214,18 @@ def main(
                                 'optimizerA_state_dict': optimizer.state_dict()}, checkpoint_name)
 
 
-            # evaluate model
-            if epoch > 1 and epoch % 1 == 0:
-                print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
-                test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
-                print('Model saved! Best val acc:', test_acc)
+            # # evaluate model
+            # if epoch > 1 and epoch % 1 == 0:
+            #     print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
+            #     test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
+            #     print('Model saved! Best val acc:', test_acc)
 
-                if wandb_enable:
-                    wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
+            #     if wandb_enable:
+            #         wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
                         
-                if wandb_enable:
-                    wandb.summary["best val acc"] = test_acc
-                    wandb.summary["best epoch"] = epoch
+            #     if wandb_enable:
+            #         wandb.summary["best val acc"] = test_acc
+            #         wandb.summary["best epoch"] = epoch
 
 
 
