@@ -146,8 +146,9 @@ def main(
 
     model_parameters = filter(lambda p: p.requires_grad, network.parameters())
     model_parameters2 = filter(lambda p: p.requires_grad, network_gt.parameters())
-    params = sum([np.prod(p.size()) for p in model_parameters]) + sum([np.prod(p.size()) for p in model_parameters2])
+    #params = sum([np.prod(p.size()) for p in model_parameters]) + sum([np.prod(p.size()) for p in model_parameters2])
     print('Num params: ', params)
+    print('xx')
 
     optimizer = torch.optim.Adam(list(network.parameters()) + list(network_gt.parameters()), lr=lr,
                                  weight_decay=weight_decay)
@@ -172,9 +173,7 @@ def main(
     if torch.cuda.is_available():
         network = network.cuda()
         network_gt = network_gt.cuda()
-        
-        network = torch.nn.parallel.DataParallel(network, device_ids=list(range(num_gpus)), dim=0)
-        
+                
         loss = loss.cuda()
         loss_local_1 = loss_local_1.cuda()
         loss_local_2 = loss_local_2.cuda()
