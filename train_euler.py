@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument('-l', "--learning_rate", default=0.001, type=float, help="learning rate")
     parser.add_argument('-s', "--snapshot", default=None,
                         type=str, help="load weights from snapshot")
-    parser.add_argument(   '-c', "--checkpoint_dir", default='/cluster/work/igp_psr/tmehmet/models/swiss_crop_map_star_4_32_0.001_6_64_2_0.1_0.3_0.0001_1_GT_labels_19_21_GP.csv_0_epoch_0_model.pth',
+    parser.add_argument(   '-c', "--checkpoint_dir", default='/cluster/work/igp_psr/tmehmet/modelsX/',
                         type=str,help="directory to save checkpoints")
     parser.add_argument('-wd', "--weight_decay", default=0.0001, type=float, help="weight_decay")
     parser.add_argument('-hd', "--hidden", default=64, type=int, help="hidden dim")
@@ -214,18 +214,18 @@ def main(
                                 'optimizerA_state_dict': optimizer.state_dict()}, checkpoint_name)
 
 
-            # evaluate model
-            if epoch > 1 and epoch % 1 == 0:
-                print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
-                test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
-                print('Model saved! Best val acc:', test_acc)
+            # # evaluate model
+            # if epoch > 1 and epoch % 1 == 0:
+            #     print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
+            #     test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
+            #     print('Model saved! Best val acc:', test_acc)
 
-                # if wandb_enable:
-                #     wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
+            #     # if wandb_enable:
+            #     #     wandb.log({"val_epoch/val_accuracy": test_acc}, step = step_count.step-1)
                         
-                # if wandb_enable:
-                #     wandb.summary["best val acc"] = test_acc
-                #     wandb.summary["best epoch"] = epoch
+            #     # if wandb_enable:
+            #     #     wandb.summary["best val acc"] = test_acc
+            #     #     wandb.summary["best epoch"] = epoch
 
 
 
