@@ -147,7 +147,7 @@ def main(
     model_parameters = filter(lambda p: p.requires_grad, network.parameters())
     model_parameters2 = filter(lambda p: p.requires_grad, network_gt.parameters())
     #params = sum([np.prod(p.size()) for p in model_parameters]) + sum([np.prod(p.size()) for p in model_parameters2])
-    print('Num params: ', params)
+    #print('Num params: ', params)
     print('xx')
 
     optimizer = torch.optim.Adam(list(network.parameters()) + list(network_gt.parameters()), lr=lr,
