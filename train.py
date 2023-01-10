@@ -106,7 +106,7 @@ def main(
 ):
     checkpoint_dir = f"{checkpoint_dir}_{experiment_id}"
     if not os.path.exists(checkpoint_dir):
-        os.makedirs(checkpoint_dir)
+        os.makedirs(checkpoint_dir) 
     
     if not eval_mode:
         traindataset = Dataset(datadir, 0., 'train', False, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train,
