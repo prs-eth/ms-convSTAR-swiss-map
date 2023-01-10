@@ -108,8 +108,9 @@ def main(
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
     
-    traindataset = Dataset(datadir, 0., 'train', False, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train,
-    npz_dir=npz_dir)
+    if not eval_mode:
+        traindataset = Dataset(datadir, 0., 'train', False, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train,
+        npz_dir=npz_dir)
     testdataset = Dataset(datadir, 0., 'test', True, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train,
     npz_dir=npz_dir)
     
@@ -148,7 +149,6 @@ def main(
     model_parameters2 = filter(lambda p: p.requires_grad, network_gt.parameters())
     #params = sum([np.prod(p.size()) for p in model_parameters]) + sum([np.prod(p.size()) for p in model_parameters2])
     #print('Num params: ', params)
-    print('xx')
 
     optimizer = torch.optim.Adam(list(network.parameters()) + list(network_gt.parameters()), lr=lr,
                                  weight_decay=weight_decay)
