@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument('-d', "--data", type=str, default='/scratch3/yihshe/Preprocessing/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
     parser.add_argument('-dn', "--npz_dir", type=str, default='/scratch3/tmehmet/swiss_crop_samples/', help="path to dataset npz files")
     parser.add_argument('-b', "--batchsize", default=32, type=int, help="batch size")
-    parser.add_argument('-w', "--workers", default=12, type=int, help="number of dataset worker threads")
+    parser.add_argument('-w', "--workers", default=1, type=int, help="number of dataset worker threads")
     parser.add_argument('-e', "--epochs", default=30, type=int, help="epochs to train")
     parser.add_argument('-l', "--learning_rate", default=0.001, type=float, help="learning rate")
     parser.add_argument('-s', "--snapshot", default='/home/tmehmet/swiss_crop_model_505/swiss_crop_map_star_4_32_0.001_6_64_2_0.1_0.3_0.0001_1_GT_labels_19_21_GP.csv_0_epoch_3_model.pth',
@@ -148,7 +148,6 @@ def main(
     model_parameters2 = filter(lambda p: p.requires_grad, network_gt.parameters())
     #params = sum([np.prod(p.size()) for p in model_parameters]) + sum([np.prod(p.size()) for p in model_parameters2])
     #print('Num params: ', params)
-    print('xx')
 
     optimizer = torch.optim.Adam(list(network.parameters()) + list(network_gt.parameters()), lr=lr,
                                  weight_decay=weight_decay)
