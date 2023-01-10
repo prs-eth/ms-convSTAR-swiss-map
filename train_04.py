@@ -23,18 +23,18 @@ def parse_args():
         --canton_ids_train, list, selected cantons for training; the rest will be used for testing
         --checkpoint_dir, str, path to save the trained models
         --prediction_dir, str, path to save the predictions
-    All default values of these variables are those currently being used.
+    All default values of these variables are those currently being used. 
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', "--data", type=str, default='/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
-    parser.add_argument('-dn', "--npz_dir", type=str, default='/scratch2/tmehmet/swiss_crop_samples/', help="path to dataset npz files")
+    parser.add_argument('-d', "--data", type=str, default='/scratch3/yihshe/Preprocessing/S2_Raw_L2A_CH_2021_hdf5_train.hdf5', help="path to dataset")
+    parser.add_argument('-dn', "--npz_dir", type=str, default='/scratch3/tmehmet/swiss_crop_samples/', help="path to dataset npz files")
     parser.add_argument('-b', "--batchsize", default=32, type=int, help="batch size")
     parser.add_argument('-w', "--workers", default=12, type=int, help="number of dataset worker threads")
     parser.add_argument('-e', "--epochs", default=30, type=int, help="epochs to train")
     parser.add_argument('-l', "--learning_rate", default=0.001, type=float, help="learning rate")
-    parser.add_argument('-s', "--snapshot", default='/scratch2/tmehmet/swiss_crop_model_12/swiss_crop_map_star_4_32_0.001_6_64_2_0.1_0.3_0.0001_1_GT_labels_19_21_GP.csv_0_epoch_2_model.pth',
+    parser.add_argument('-s', "--snapshot", default='/home/tmehmet/swiss_crop_model_505/swiss_crop_map_star_4_32_0.001_6_64_2_0.1_0.3_0.0001_1_GT_labels_19_21_GP.csv_0_epoch_3_model.pth',
                         type=str, help="load weights from snapshot")
-    parser.add_argument(   '-c', "--checkpoint_dir", default='/scratch2/tmehmet/swiss_crop_model',
+    parser.add_argument(   '-c', "--checkpoint_dir", default='/scratch2/tmehmet/swiss_crop_model_XX',
                         type=str,help="directory to save checkpoints")
     parser.add_argument('-wd', "--weight_decay", default=0.0001, type=float, help="weight_decay")
     parser.add_argument('-hd', "--hidden", default=64, type=int, help="hidden dim")
@@ -56,7 +56,7 @@ def parse_args():
     parser.add_argument('-cm', "--apply_cm", default=False, type=bool, help="apply cloud masking")
     parser.add_argument('-pred', "--prediction_dir", default='predictions', type=str,help="directory to save predictions")
     parser.add_argument('-exp', "--experiment_id", default=0, type=int, help="times of running the experiment")
-    parser.add_argument('--data_canton_labels', default = "/scratch2/tmehmet/swiss_crop/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
+    parser.add_argument('--data_canton_labels', default = "/scratch3/yihshe/Preprocessing/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
     parser.add_argument('--canton_ids_train', default = ["0", "3", "5", "14", "18", "19", "20", "25"], type=list, help="Canton ids to train")
     parser.add_argument('-wdb', "--wandb_enable", default=True, type=bool, help="wandb")
     parser.add_argument('-ev', "--eval", action='store_true', help="eval mode")
@@ -146,8 +146,9 @@ def main(
 
     model_parameters = filter(lambda p: p.requires_grad, network.parameters())
     model_parameters2 = filter(lambda p: p.requires_grad, network_gt.parameters())
-    params = sum([np.prod(p.size()) for p in model_parameters]) + sum([np.prod(p.size()) for p in model_parameters2])
-    print('Num params: ', params)
+    #params = sum([np.prod(p.size()) for p in model_parameters]) + sum([np.prod(p.size()) for p in model_parameters2])
+    #print('Num params: ', params)
+    print('xx')
 
     optimizer = torch.optim.Adam(list(network.parameters()) + list(network_gt.parameters()), lr=lr,
                                  weight_decay=weight_decay)
@@ -172,8 +173,6 @@ def main(
     if torch.cuda.is_available():
         network = network.cuda()
         network_gt = network_gt.cuda()
-        
-        network = torch.nn.parallel.DataParallel(network, device_ids=list(range(num_gpus)), dim=0)
         
         loss = loss.cuda()
         loss_local_1 = loss_local_1.cuda()
