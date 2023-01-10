@@ -173,7 +173,9 @@ def main(
     if torch.cuda.is_available():
         network = network.cuda()
         network_gt = network_gt.cuda()
-                
+        
+        network = torch.nn.parallel.DataParallel(network, device_ids=list(range(num_gpus)), dim=0)
+
         loss = loss.cuda()
         loss_local_1 = loss_local_1.cuda()
         loss_local_2 = loss_local_2.cuda()
