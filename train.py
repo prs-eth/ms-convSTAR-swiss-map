@@ -114,9 +114,9 @@ def main(
     testdataset = Dataset(datadir, 0., 'test', True, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train,
     npz_dir=npz_dir)
     
-    nclasses = traindataset.n_classes
-    nclasses_local_1 = traindataset.n_classes_local_1
-    nclasses_local_2 = traindataset.n_classes_local_2
+    nclasses = testdataset.n_classes
+    nclasses_local_1 = testdataset.n_classes_local_1
+    nclasses_local_2 = testdataset.n_classes_local_2
 
     LOSS_WEIGHT = torch.ones(nclasses)
     LOSS_WEIGHT[0] = 0
@@ -126,9 +126,11 @@ def main(
     LOSS_WEIGHT_LOCAL_2[0] = 0
 
     # Class stage mappping. 3 stages to use
-    s1_2_s3 = traindataset.l1_2_g
-    s2_2_s3 = traindataset.l2_2_g
-    traindataloader = torch.utils.data.DataLoader(traindataset, batch_size=batchsize, shuffle=True, num_workers=workers)
+    s1_2_s3 = testdataset.l1_2_g
+    s2_2_s3 = testdataset.l2_2_g
+    
+    if not eval_mode:
+        traindataloader = torch.utils.data.DataLoader(traindataset, batch_size=batchsize, shuffle=True, num_workers=workers)
 
     # Define the model
     if cell == 'lstm':
