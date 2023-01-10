@@ -187,6 +187,7 @@ def main(
         network.load_state_dict(checkpoint['network_state_dict'])
         network_gt.load_state_dict(checkpoint['network_gt_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizerA_state_dict'])
+        print("Model is loaded>")
 
     if eval_mode:
         print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
