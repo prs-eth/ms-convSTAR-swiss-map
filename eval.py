@@ -142,7 +142,7 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
     if model_gt is not None:
         model_gt.eval()
 
-    dataloader = torch.utils.data.DataLoader(dataset=dataset, batch_size=batchsize, num_workers=workers)
+    dataloader = torch.utils.data.DataLoader(dataset=dataset, batch_size=batchsize, num_workers=workers, shuffle=True)
 
     logprobabilites, targets, gt_instance, logprobabilites_refined = test(model, model_gt, dataloader, level)
     # TODO TODO save the two probabilities for average mapping. prob map with max(logprob, 1). np.mean(5 prob distributions), np.sum. 
