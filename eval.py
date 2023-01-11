@@ -19,7 +19,7 @@ def test(model, model_gt, dataloader, level=3):
     logprobabilities_refined = list()
     #get the corresponding target gt of given level
     for iteration, data in tqdm(enumerate(dataloader)):
-        if iteration==5000:
+        if iteration==2000:
             break
         if level==1:
             inputs, _, targets, _, gt_instance = data
@@ -73,7 +73,7 @@ def test(model, model_gt, dataloader, level=3):
         logprobabilities_refined.append(z3_refined)
         
         del z1, z2, z3, z3_refined
-        
+
     return np.vstack(logprobabilities), np.concatenate(targets_list), np.vstack(gt_instance_list), np.vstack(logprobabilities_refined)
 
 
