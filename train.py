@@ -365,5 +365,5 @@ if __name__ == "__main__":
         wandb_enable = args.wandb_enable,
         eval_mode = args.eval
     )
-    if wandb_enable:
+    if args.wandb_enable:
         wandb.finish()
