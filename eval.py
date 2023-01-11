@@ -55,10 +55,10 @@ def test(model, model_gt, dataloader, level=3):
         # z3 = z3.cpu().detach().numpy()
         # z3_refined = z3_refined.cpu().detach().numpy()
 
-        z1 = z1.detach().numpy()
-        z2 = z2.detach().numpy()
-        z3 = z3.detach().numpy()
-        z3_refined = z3_refined.detach().numpy()
+        z1 = z1.detach().cpu().numpy()
+        z2 = z2.detach().cpu().numpy()
+        z3 = z3.detach().cpu().numpy()
+        z3_refined = z3_refined.detach().cpu().numpy()
         
         targets_list.append(y)
         gt_instance_list.append(y_i)
