@@ -72,6 +72,8 @@ def test(model, model_gt, dataloader, level=3):
         # NOTE the refined prediction is always based on level 3
         logprobabilities_refined.append(z3_refined)
         
+        del z1, z2, z3, z3_refined
+        
     return np.vstack(logprobabilities), np.concatenate(targets_list), np.vstack(gt_instance_list), np.vstack(logprobabilities_refined)
 
 
