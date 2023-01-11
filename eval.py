@@ -74,7 +74,7 @@ def test(model, model_gt, dataloader, level=3):
         
         del z1, z2, z3, z3_refined
 
-    return np.vstack(logprobabilities), np.concatenate(targets_list), np.vstack(gt_instance_list), np.vstack(logprobabilities_refined)
+    return  np.concatenate(targets_list), np.vstack(logprobabilities_refined)
 
 
 def confusion_matrix_to_accuraccies(confusion_matrix):
@@ -146,15 +146,17 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
 
     dataloader = torch.utils.data.DataLoader(dataset=dataset, batch_size=batchsize, num_workers=workers, shuffle=True)
 
-    logprobabilites, targets, gt_instance, logprobabilites_refined = test(model, model_gt, dataloader, level)
+    targets, logprobabilites_refined = test(model, model_gt, dataloader, level)
     # TODO TODO save the two probabilities for average mapping. prob map with max(logprob, 1). np.mean(5 prob distributions), np.sum. 
-    predictions = logprobabilites.argmax(1)
+    #predictions = logprobabilites.argmax(1)
     predictions_refined = logprobabilites_refined.argmax(1)
 
+    del logprobabilites_refined
+
     # one dimensional array after being flattened
-    predictions = predictions.flatten()
+    #predictions = predictions.flatten()
     targets = targets.flatten()
-    gt_instance = gt_instance.flatten()
+    #gt_instance = gt_instance.flatten()
     predictions_refined = predictions_refined.flatten()
 
     # Ignore unknown class class_id=0
@@ -174,8 +176,8 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
         valid_crop_samples = targets != 0
     # note that GT might not be available when doing inference
     targets_wo_unknown = targets[valid_crop_samples]
-    predictions_wo_unknown = predictions[valid_crop_samples]
-    gt_instance_wo_unknown = gt_instance[valid_crop_samples]
+    # predictions_wo_unknown = predictions[valid_crop_samples]
+    # gt_instance_wo_unknown = gt_instance[valid_crop_samples]
     predictions_refined_wo_unknown = predictions_refined[valid_crop_samples]
 
     labels = np.unique(targets_wo_unknown)
@@ -186,6 +188,9 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
     else:
         confusion_matrix = build_confusion_matrix(targets_wo_unknown, predictions_wo_unknown)
     print_report(*confusion_matrix_to_accuraccies(confusion_matrix))
+
+    print('Evaluation is done pizel level!')
+    return True
 
     # pred can be level 1, 2, 3
     prediction_wo_fieldwise = np.zeros_like(targets_wo_unknown)
