@@ -19,7 +19,7 @@ def test(model, model_gt, dataloader, level=3):
     logprobabilities_refined = list()
     #get the corresponding target gt of given level
     for iteration, data in tqdm(enumerate(dataloader)):
-        if iteration==8000:
+        if iteration==10:
             break
         if level==1:
             inputs, _, targets, _, gt_instance = data
@@ -35,12 +35,14 @@ def test(model, model_gt, dataloader, level=3):
 
         
         y = targets.numpy()
-        y_i = gt_instance.cpu().detach().numpy()
+        #y_i = gt_instance.cpu().detach().numpy()
+        y_i = gt_instance.cpu().numpy()
 
         z3, z1, z2 = model.forward(inputs)
 
         if model_gt is not None:
-            z3_refined = model_gt([z1.detach(), z2.detach(), z3.detach()])
+            #z3_refined = model_gt([z1.detach(), z2.detach(), z3.detach()])
+            z3_refined = model_gt([z1, z2, z3])
         else:
             z3_refined = z3
 
@@ -48,10 +50,15 @@ def test(model, model_gt, dataloader, level=3):
         if type(z3_refined) == tuple:
             z3_refined = z3_refined[0]
             
-        z1 = z1.cpu().detach().numpy()
-        z2 = z2.cpu().detach().numpy()
-        z3 = z3.cpu().detach().numpy()
-        z3_refined = z3_refined.cpu().detach().numpy()
+        # z1 = z1.cpu().detach().numpy()
+        # z2 = z2.cpu().detach().numpy()
+        # z3 = z3.cpu().detach().numpy()
+        # z3_refined = z3_refined.cpu().detach().numpy()
+
+                z1 = z1.cpu().detach().numpy()
+        z2 = z2.cpu().numpy()
+        z3 = z3.cpu().numpy()
+        z3_refined = z3_refined.cpu().numpy()
         
         targets_list.append(y)
         gt_instance_list.append(y_i)
