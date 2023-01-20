@@ -19,8 +19,8 @@ def test(model, model_gt, dataloader, level=3):
     logprobabilities_refined = list()
     #get the corresponding target gt of given level
     for iteration, data in tqdm(enumerate(dataloader)):
-        if iteration==100000:
-            break
+        # if iteration==100000:
+        #     break
         if level==1:
             inputs, _, targets, _, gt_instance = data
         elif level ==2:
