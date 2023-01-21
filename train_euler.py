@@ -61,6 +61,8 @@ def parse_args():
     parser.add_argument('-wdb', "--wandb_enable", default=False, type=bool, help="wandb")
     parser.add_argument('-ev', "--eval", action='store_true', help="eval mode")
     parser.add_argument('-vi', "--viz", action='store_true', help="viz mode")
+    parser.add_argument('-el', "--eval_level", default=3, type=int, help="eval level")
+
 
     return parser.parse_args()
 
@@ -104,7 +106,8 @@ def main(
         apply_cm=None,
         wandb_enable=False,
         eval_mode=False,
-        viz_mode = False
+        viz_mode = False,
+        eval_level=3
 ):
     checkpoint_dir = f"{checkpoint_dir}_{experiment_id}"
     if not os.path.exists(checkpoint_dir):
@@ -194,7 +197,7 @@ def main(
 
     if eval_mode:
         print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
-        test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id, viz=viz_mode)
+        test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id, viz=viz_mode, level=eval_level)
         print('Best val acc:', test_acc)
 
     else:
@@ -366,7 +369,8 @@ if __name__ == "__main__":
         apply_cm = args.apply_cm,
         wandb_enable = args.wandb_enable,
         eval_mode = args.eval,
-        viz_mode = args.viz
+        viz_mode = args.viz,
+        eval_level = args.eval_level
     )
     # if wandb_enable:
     #     wandb.finish()
