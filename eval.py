@@ -144,7 +144,7 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
 
     logprobabilites, targets, gt_instance, logprobabilites_refined = test(model, model_gt, dataloader, level)
     # TODO TODO save the two probabilities for average mapping. prob map with max(logprob, 1). np.mean(5 prob distributions), np.sum. 
-    #predictions = logprobabilites.argmax(1)
+    predictions = logprobabilites.argmax(1)
     predictions_refined = logprobabilites_refined.argmax(1)
 
 
