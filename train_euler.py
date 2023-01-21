@@ -193,7 +193,7 @@ def main(
     if eval_mode:
         print("\n Eval on test set") # NOTE default level is level 3 for evaluate_fieldwise.
         test_acc = evaluate_fieldwise(network, network_gt, testdataset, batchsize=batchsize, prediction_dir=prediction_dir, experiment_id=experiment_id)
-        print('Model saved! Best val acc:', test_acc)
+        print('Best val acc:', test_acc)
 
     else:
         step_count = stepCount(init_step=0)

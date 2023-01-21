@@ -19,8 +19,8 @@ def test(model, model_gt, dataloader, level=3):
     logprobabilities_refined = list()
     #get the corresponding target gt of given level
     for iteration, data in tqdm(enumerate(dataloader)):
-        # if iteration==100000:
-        #     break
+        if iteration==100:
+            break
         if level==1:
             inputs, _, targets, _, gt_instance = data
         elif level ==2:
@@ -151,12 +151,11 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Tru
     #predictions = logprobabilites.argmax(1)
     predictions_refined = logprobabilites_refined.argmax(1)
 
-    del logprobabilites_refined
 
     # one dimensional array after being flattened
-    #predictions = predictions.flatten()
+    predictions = predictions.flatten()
     targets = targets.flatten()
-    #gt_instance = gt_instance.flatten()
+    gt_instance = gt_instance.flatten()
     predictions_refined = predictions_refined.flatten()
 
     # Ignore unknown class class_id=0
@@ -176,8 +175,8 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Tru
         valid_crop_samples = targets != 0
     # note that GT might not be available when doing inference
     targets_wo_unknown = targets[valid_crop_samples]
-    # predictions_wo_unknown = predictions[valid_crop_samples]
-    # gt_instance_wo_unknown = gt_instance[valid_crop_samples]
+    predictions_wo_unknown = predictions[valid_crop_samples]
+    gt_instance_wo_unknown = gt_instance[valid_crop_samples]
     predictions_refined_wo_unknown = predictions_refined[valid_crop_samples]
 
     labels = np.unique(targets_wo_unknown)
@@ -190,7 +189,6 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Tru
     print_report(*confusion_matrix_to_accuraccies(confusion_matrix))
 
     print('Evaluation is done pizel level!')
-    return True
 
     # pred can be level 1, 2, 3
     prediction_wo_fieldwise = np.zeros_like(targets_wo_unknown)
