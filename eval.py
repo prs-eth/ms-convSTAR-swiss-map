@@ -131,7 +131,7 @@ def print_report(overall_accuracy, kappa, precision, recall, f1, cl_acc):
     return cl_acc
 
 
-def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=False, prediction_dir = None, experiment_id = 0, fold_num=5, level=3,
+def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=True, prediction_dir = None, experiment_id = 0, fold_num=5, level=3,
                         ignore_undefined_classes=False):
 
     if prediction_dir != None:
