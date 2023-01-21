@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument('-w', "--workers", default=1, type=int, help="number of dataset worker threads")
     parser.add_argument('-e', "--epochs", default=30, type=int, help="epochs to train")
     parser.add_argument('-l', "--learning_rate", default=0.001, type=float, help="learning rate")
-    parser.add_argument('-s', "--snapshot", default=None,
+    parser.add_argument('-s', "--snapshot", default='/cluster/work/igp_psr/tmehmet/swiss_map_star_4_32_0.0001_6_64_2_0.1_0.3_0.0001_1_GT_labels_19_21_GP.csv_0_epoch_7_model.pth',
                         type=str, help="load weights from snapshot")
     parser.add_argument(   '-c', "--checkpoint_dir", default='/cluster/work/igp_psr/tmehmet/swiss_map_star_4_32_0.0001_6_64_2_0.1_0.3_0.0001_1_GT_labels_19_21_GP.csv_0_epoch_7_model.pth',
                         type=str,help="directory to save checkpoints")
