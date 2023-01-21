@@ -183,8 +183,7 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
     else:
         confusion_matrix = build_confusion_matrix(targets_wo_unknown, predictions_wo_unknown)
     print_report(*confusion_matrix_to_accuraccies(confusion_matrix))
-
-    print('Evaluation is done pizel level!')
+    print('Evaluation is done pixel level!')
 
     # pred can be level 1, 2, 3
     prediction_wo_fieldwise = np.zeros_like(targets_wo_unknown)
@@ -230,6 +229,7 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
         confusion_matrix = build_confusion_matrix(targets_wo_unknown, prediction_wo_fieldwise)
 
     print_report(*confusion_matrix_to_accuraccies(confusion_matrix))
+    print('Evaluation is done field level!')
     # the fieldwise-refined excluding unknow classes prediction is the final prediction we are going to evaluate.
     pix_accuracy = np.sum(prediction_wo_fieldwise_refined==targets_wo_unknown) / prediction_wo_fieldwise_refined.shape[0] #refined prediction is only applied to level3
 
