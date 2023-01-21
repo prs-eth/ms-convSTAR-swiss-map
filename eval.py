@@ -249,6 +249,7 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
             }
             df = pd.DataFrame(vis_data, dtype='int32')
             df.to_csv(os.path.join(prediction_dir, f"visual_pred_level_{level}.csv"), index=False)
+            print('CSVs are saved!')
         else:
             np.savez(save_path, level=level, logprobabilites = logprobabilites, targets = targets, gt_instance = gt_instance, cm=confusion_matrix,
             prediction_per_field = prediction_field, gt_per_field = target_field, field_instance_id = target_field_instance_id)
