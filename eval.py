@@ -19,7 +19,7 @@ def test(model, model_gt, dataloader, level=3):
     logprobabilities_refined = list()
     #get the corresponding target gt of given level
     for iteration, data in tqdm(enumerate(dataloader)):
-        if iteration==100:
+        if iteration==10:
             break
         if level==1:
             inputs, _, targets, _, gt_instance = data
@@ -50,10 +50,6 @@ def test(model, model_gt, dataloader, level=3):
         if type(z3_refined) == tuple:
             z3_refined = z3_refined[0]
             
-        # z1 = z1.cpu().detach().numpy()
-        # z2 = z2.cpu().detach().numpy()
-        # z3 = z3.cpu().detach().numpy()
-        # z3_refined = z3_refined.cpu().detach().numpy()
 
         z1 = z1.detach().cpu().numpy()
         z2 = z2.detach().cpu().numpy()
@@ -74,8 +70,8 @@ def test(model, model_gt, dataloader, level=3):
         
         del z1, z2, z3, z3_refined
 
-    return  np.concatenate(targets_list), np.vstack(logprobabilities_refined)
 
+    return np.vstack(logprobabilities), np.concatenate(targets_list), np.vstack(gt_instance_list), np.vstack(logprobabilities_refined)
 
 def confusion_matrix_to_accuraccies(confusion_matrix):
 
@@ -146,7 +142,7 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
 
     dataloader = torch.utils.data.DataLoader(dataset=dataset, batch_size=batchsize, num_workers=workers, shuffle=False)
 
-    targets, logprobabilites_refined = test(model, model_gt, dataloader, level)
+    logprobabilites, targets, gt_instance, logprobabilites_refined = test(model, model_gt, dataloader, level)
     # TODO TODO save the two probabilities for average mapping. prob map with max(logprob, 1). np.mean(5 prob distributions), np.sum. 
     #predictions = logprobabilites.argmax(1)
     predictions_refined = logprobabilites_refined.argmax(1)
