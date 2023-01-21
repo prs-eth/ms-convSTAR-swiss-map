@@ -1,3 +1,9 @@
+"""
+
+bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --seed 1001 -exp 1001
+
+"""
+
 import torch
 import numpy as np
 torch.backends.cudnn.deterministic = True
