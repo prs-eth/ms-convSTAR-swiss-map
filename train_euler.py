@@ -118,6 +118,11 @@ def main(
     testdataset = Dataset(datadir, 0., 'test', True, fold_num, gt_path, num_channel=input_dim, apply_cloud_masking=apply_cm, data_canton_labels_dir=data_canton_labels_dir, canton_ids_train=canton_ids_train,
     npz_dir=npz_dir)
     
+    #print dataset stats
+    traindataset.data_stat()
+    testdataset.data_stat()
+    
+
     nclasses = traindataset.n_classes
     nclasses_local_1 = traindataset.n_classes_local_1
     nclasses_local_2 = traindataset.n_classes_local_2
