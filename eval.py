@@ -19,8 +19,8 @@ def test(model, model_gt, dataloader, level=3):
     logprobabilities_refined = list()
     #get the corresponding target gt of given level
     for iteration, data in tqdm(enumerate(dataloader)):
-        # if iteration==2:
-        #     break
+        if iteration==1010:
+            break
         if level==1:
             inputs, _, targets, _, gt_instance = data
         elif level ==2:
@@ -197,8 +197,12 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
     prediction_field_refined = np.ones(num_field)*9999
     target_field_instance_id = np.zeros(num_field)
     
+    print('Field-wise evaluation started')
     count = 0
     for i in np.unique(gt_instance_wo_unknown).tolist():
+        if i == 1000:
+            print(i)
+
         field_indexes = gt_instance_wo_unknown == i
 
         pred = predictions_wo_unknown[field_indexes] 
@@ -233,23 +237,33 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
     # the fieldwise-refined excluding unknow classes prediction is the final prediction we are going to evaluate.
     pix_accuracy = np.sum(prediction_wo_fieldwise_refined==targets_wo_unknown) / prediction_wo_fieldwise_refined.shape[0] #refined prediction is only applied to level3
 
+    print('Quantitative evaluation is done!')
+
+
     save_path = os.path.join(prediction_dir, f"predictions_level_{level}")
     if viz: #used in test we want to save the csv and some other data for visualization purpose
         if level == 3:
             # for visualization, use prediction_per_field_refined and field_instance_id. 
-            np.savez(save_path, level=level, logprobabilites = logprobabilites, logprobabilites_refined = logprobabilites_refined, gt = targets, gt_instance = gt_instance, cm=confusion_matrix,
-            prediction_per_field = prediction_field, prediction_per_field_refined = prediction_field_refined, gt_per_field = target_field, field_instance_id = target_field_instance_id)
+            # np.savez(save_path, level=level, logprobabilites = logprobabilites, logprobabilites_refined = logprobabilites_refined, gt = targets, gt_instance = gt_instance, cm=confusion_matrix,
+            # prediction_per_field = prediction_field, prediction_per_field_refined = prediction_field_refined, gt_per_field = target_field, field_instance_id = target_field_instance_id)
+            
             # for visual. note that prediction_field_reined is always level 3
             # you can further aggregate the predictions after running 5 rounds of training and evaluations
+            
+            performance_field = target_field == prediction_field_refined
+            performance_field = performance_field.astype(int)
+            
             vis_data = {
                 'target_field_instance_id': target_field_instance_id,
                 'target_field': target_field, 
-                'prediction_field': prediction_field, 
-                'prediction_field_refined': prediction_field_refined
+                'prediction_field_refined': prediction_field_refined,
+                'performance_field': performance_field,
+                'uncertanity_field': uncertanity_field
             }
             df = pd.DataFrame(vis_data, dtype='int32')
             df.to_csv(os.path.join(prediction_dir, f"visual_pred_level_{level}.csv"), index=False)
             print('CSVs are saved!')
+        
         else:
             np.savez(save_path, level=level, logprobabilites = logprobabilites, targets = targets, gt_instance = gt_instance, cm=confusion_matrix,
             prediction_per_field = prediction_field, gt_per_field = target_field, field_instance_id = target_field_instance_id)

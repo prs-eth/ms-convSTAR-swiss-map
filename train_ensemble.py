@@ -1,6 +1,11 @@
 """
 
 bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --seed 1001 -exp 1001
+bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --seed 1002 -exp 1002
+bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --seed 1003 -exp 1003
+bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --seed 1004 -exp 1004
+bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --seed 1005 -exp 1005
+
 
 """
 
