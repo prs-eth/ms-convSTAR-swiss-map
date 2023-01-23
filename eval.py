@@ -258,7 +258,7 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
                 'target_field': target_field, 
                 'prediction_field_refined': prediction_field_refined,
                 'performance_field': performance_field
-                            }
+            }
             df = pd.DataFrame(vis_data, dtype='int32')
             df.to_csv(os.path.join(prediction_dir, f"visual_pred_level_{level}.csv"), index=False)
             print('CSVs are saved!')
