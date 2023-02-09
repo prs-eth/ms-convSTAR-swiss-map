@@ -260,14 +260,13 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
             # for visual. note that prediction_field_reined is always level 3
             # you can further aggregate the predictions after running 5 rounds of training and evaluations
             
-            performance_field = target_field == prediction_field_refined
+            performance_field = target_field == prediction_wo_fieldwise_refined
             performance_field = performance_field.astype(int)
             
             vis_data = {
                 'target_field_instance_id': target_field_instance_id,
                 'target_field': target_field, 
-                'prediction_field': prediction_field,
-                'prediction_field_refined': prediction_field_refined,
+                'prediction_field_refined': prediction_wo_fieldwise_refined,
                 'performance_field': performance_field
             }
             df = pd.DataFrame(vis_data, dtype='int32')
