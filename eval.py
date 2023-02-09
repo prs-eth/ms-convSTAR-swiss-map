@@ -19,8 +19,11 @@ def test(model, model_gt, dataloader, level=3):
     logprobabilities_refined = list()
     #get the corresponding target gt of given level
     for iteration, data in tqdm(enumerate(dataloader)):
-        if iteration==1010:
+        
+        # Next line is for debugging
+        if iteration==10:
             break
+
         if level==1:
             inputs, _, targets, _, gt_instance = data
         elif level ==2:
@@ -180,10 +183,17 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
     # evaluation of pixel-wise prediction. for level 3,  we use the refined predictions 
     if level == 3:
         confusion_matrix = build_confusion_matrix(targets_wo_unknown, predictions_refined_wo_unknown)
+        confusion_matrix2 = build_confusion_matrix(targets_wo_unknown, predictions_wo_unknown)
+
     else:
         confusion_matrix = build_confusion_matrix(targets_wo_unknown, predictions_wo_unknown)
-    print_report(*confusion_matrix_to_accuraccies(confusion_matrix))
+    
     print('Evaluation is done pixel level!')
+
+    print('CM without label refinement:')
+    print_report(*confusion_matrix_to_accuraccies(confusion_matrix2))
+    print('CM without label refinement:')
+    print_report(*confusion_matrix_to_accuraccies(confusion_matrix))
 
     # pred can be level 1, 2, 3
     prediction_wo_fieldwise = np.zeros_like(targets_wo_unknown)
