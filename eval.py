@@ -261,7 +261,7 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
             # you can further aggregate the predictions after running 5 rounds of training and evaluations
             
             performance_field = target_field == prediction_wo_fieldwise_refined
-            performance_field = performance_field.astype(int)
+            #performance_field = performance_field.astype(int)
             
             vis_data = {
                 'target_field_instance_id': target_field_instance_id,
