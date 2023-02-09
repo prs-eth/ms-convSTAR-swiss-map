@@ -226,12 +226,12 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
         pred = np.bincount(pred)
         pred = np.argmax(pred)
         prediction_wo_fieldwise_refined[field_indexes] = pred
-        prediction_field[count] = pred # for visual. level 3 refined pred. Final Result.
+        prediction_field_refined[count] = pred # for visual. level 3 refined pred. Final Result.
 
         target = targets_wo_unknown[field_indexes]
         target = np.bincount(target)
         target = np.argmax(target)
-        prediction_field_refined[count] = target # for visual
+        target_field[count] = target # for visual
         
         target_field_instance_id[count] = i # for visual
 
