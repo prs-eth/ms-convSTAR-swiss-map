@@ -21,7 +21,7 @@ def test(model, model_gt, dataloader, level=3):
     for iteration, data in tqdm(enumerate(dataloader)):
         
         # Next line is for debugging
-        if iteration==1000:
+        if iteration==10:
             break
 
         if level==1:
@@ -42,6 +42,10 @@ def test(model, model_gt, dataloader, level=3):
         y_i = gt_instance.detach().numpy()
 
         z3, z1, z2 = model.forward(inputs)
+
+
+        print('xxxxxxx')
+        print(model_gt)
 
         if model_gt is not None:
             #z3_refined = model_gt([z1.detach(), z2.detach(), z3.detach()])
