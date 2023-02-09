@@ -21,7 +21,7 @@ def test(model, model_gt, dataloader, level=3):
     for iteration, data in tqdm(enumerate(dataloader)):
         
         # Next line is for debugging
-        if iteration==100:
+        if iteration==1000:
             break
 
         if level==1:
