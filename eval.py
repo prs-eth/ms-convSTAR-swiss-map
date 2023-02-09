@@ -21,7 +21,7 @@ def test(model, model_gt, dataloader, level=3):
     for iteration, data in tqdm(enumerate(dataloader)):
         
         # Next line is for debugging
-        if iteration==10:
+        if iteration==100:
             break
 
         if level==1:
@@ -192,7 +192,7 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
 
     print('CM without label refinement:')
     print_report(*confusion_matrix_to_accuraccies(confusion_matrix2))
-    print('CM without label refinement:')
+    print('CM with label refinement:')
     print_report(*confusion_matrix_to_accuraccies(confusion_matrix))
 
     # pred can be level 1, 2, 3
