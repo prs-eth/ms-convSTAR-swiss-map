@@ -21,8 +21,8 @@ def test(model, model_gt, dataloader, level=3):
     for iteration, data in tqdm(enumerate(dataloader)):
         
         # Next line is for debugging
-        if iteration==10:
-            break
+        # if iteration==10:
+        #     break
 
         if level==1:
             inputs, _, targets, _, gt_instance = data
