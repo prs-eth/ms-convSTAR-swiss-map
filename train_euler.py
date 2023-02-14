@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument('-l', "--learning_rate", default=0.001, type=float, help="learning rate")
     parser.add_argument('-s', "--snapshot", default='/cluster/work/igp_psr/tmehmet/swiss_map_star_4_32_0.0001_6_64_2_0.1_0.3_0.0001_1_GT_labels_19_21_GP.csv_0_epoch_7_model.pth',
                         type=str, help="load weights from snapshot")
-    parser.add_argument(   '-c', "--checkpoint_dir", default='/cluster/work/igp_psr/tmehmet/swiss_map_star_4_32_0.0001_6_64_2_0.1_0.3_0.0001_1_GT_labels_19_21_GP.csv_0_epoch_7_model.pth',
+    parser.add_argument(   '-c', "--checkpoint_dir", default='/cluster/work/igp_psr/tmehmet/swiss_crop_model_ensemble/member_2003/swiss_map_star_4_16_0.001_6_128_2_0.1_0.3_0.0001_1_GT_labels_19_21_GP.csv_2003_epoch_24_model.pth',
                         type=str,help="directory to save checkpoints")
     parser.add_argument('-wd', "--weight_decay", default=0.0001, type=float, help="weight_decay")
     parser.add_argument('-hd', "--hidden", default=64, type=int, help="hidden dim")
