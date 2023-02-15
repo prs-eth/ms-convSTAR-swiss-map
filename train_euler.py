@@ -38,7 +38,7 @@ def parse_args():
                         type=str,help="directory to save checkpoints")
     parser.add_argument('-wd', "--weight_decay", default=0.0001, type=float, help="weight_decay")
     parser.add_argument('-hd', "--hidden", default=64, type=int, help="hidden dim")
-    parser.add_argument('-nl', "n--layer", default=6, type=int, help="num layer")
+    parser.add_argument('-nl', "--layer", default=6, type=int, help="num layer")
     parser.add_argument('-lrs', "--lrSC", default=2, type=int, help="lrScheduler")
     parser.add_argument('-nm', "--name", default='swiss_map', type=str, help="name")
     parser.add_argument('-l1', "--lambda_1", default=0.1, type=float, help="lambda_1")
