@@ -5,6 +5,7 @@ sys.path.append("src")
 sys.path.append("src/models")
 import torch.optim
 from tqdm import tqdm
+from loguru import logger
 import numpy as np
 from sklearn.metrics import confusion_matrix as sklearn_cm
 import torch.multiprocessing
@@ -129,6 +130,22 @@ def print_report(overall_accuracy, kappa, precision, recall, f1, cl_acc):
     #print('Per-class acc:', cl_acc)
     return cl_acc
 
+def print_report_log(overall_accuracy, kappa, precision, recall, f1, cl_acc):
+    
+    report="""
+    overall accuracy: \t{:.3f}
+    kappa \t\t{:.3f}
+    precision \t\t{:.3f}
+    recall \t\t{:.3f}
+    f1 \t\t\t{:.3f}
+    """.format(overall_accuracy, kappa, precision.mean(), recall.mean(), f1.mean())
+    
+    logger.info(report)
+
+    return cl_acc
+
+
+
 
 def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=False, prediction_dir = None, experiment_id = 0, fold_num=5, level=3,
                         ignore_undefined_classes=False):
@@ -195,6 +212,18 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
     print('CM with label refinement:')
     print_report(*confusion_matrix_to_accuraccies(confusion_matrix))
 
+
+
+
+    logger.info('CM without label refinement:')
+    print_report_info(*confusion_matrix_to_accuraccies(confusion_matrix2))
+    logger.info('CM with label refinement:')
+    print_report_info(*confusion_matrix_to_accuraccies(confusion_matrix))
+    logger.info('Evaluation is done pixel level!')
+
+
+
+
     # pred can be level 1, 2, 3
     prediction_wo_fieldwise = np.zeros_like(targets_wo_unknown)
     # pred_refined can only be level 3
@@ -243,6 +272,8 @@ def evaluate_fieldwise(model, model_gt, dataset, batchsize=1, workers=1, viz=Fal
         confusion_matrix = build_confusion_matrix(targets_wo_unknown, prediction_wo_fieldwise)
 
     print_report(*confusion_matrix_to_accuraccies(confusion_matrix))
+    print_report_info(*confusion_matrix_to_accuraccies(confusion_matrix))
+
     print('Evaluation is done field level!')
     # the fieldwise-refined excluding unknow classes prediction is the final prediction we are going to evaluate.
     pix_accuracy = np.sum(prediction_wo_fieldwise_refined==targets_wo_unknown) / prediction_wo_fieldwise_refined.shape[0] #refined prediction is only applied to level3

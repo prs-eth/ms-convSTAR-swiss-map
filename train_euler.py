@@ -5,6 +5,7 @@ torch.backends.cudnn.benchmark = False
 import torch.nn
 import argparse
 import os
+from loguru import logger
 from dataset_npz import Dataset
 from models.multi_stage_sequenceencoder import multistageSTARSequentialEncoder, multistageLSTMSequentialEncoder
 from models.networkConvRef import model_2DConv
@@ -336,6 +337,7 @@ if __name__ == "__main__":
         args.lambda_1) + '_' + str(args.lambda_2) + '_' + str(args.weight_decay) + '_' + str(args.fold) + '_' + str(
         args.gt_path) + '_' + str(args.seed)
     print(model_name)
+    logger.info(model_name)
 
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
