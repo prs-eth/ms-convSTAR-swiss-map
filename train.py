@@ -375,3 +375,5 @@ if __name__ == "__main__":
     )
     if args.wandb_enable:
         wandb.finish()
+
+    logger.add(str('./logger.log'))
