@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#BSUB -W 24:00
-#BSUB -n 4
-#BSUB -R "rusage[mem=20000,ngpus_excl_p=2]"
-#BSUB -R "select[gpu_mtotal0>=10240]"
-#BSUB -J "swiss_map"
-#BSUB -R "rusage[scratch=2000]"
-#BSUB -o /cluster/home/tmehmet/1.txt
+#SBATCH --time=24:00:00
+#SBATCH --ntasks=1
+#SBATCH --output /cluster/home/tmehmet/ms-convSTAR-swiss-map/euluer_outputs/outfile_%J.%I.txt
+#SBATCH --mem-per-cpu=13000
+#SBATCH --gpus=1
+#SBATCH --gres=gpumem:10g
+#SBATCH --mail-type=END,FAIL
+# ## ##SBATCH -R "rusage[scratch=240000]"
 
-export CUDA_VISIBLE_DEVICES=0,1
-printenv CUDA_VISIBLE_DEVICES
 
-python3 train.py --seed 0 --experiment_id 0 
+# Evaluation
+python3 train_euler.py --eval -w 1 -b 16 --hidden 128 -exp 9999999
