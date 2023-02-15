@@ -5,6 +5,7 @@ torch.backends.cudnn.benchmark = False
 import torch.nn
 import argparse
 import os
+from loguru import logger
 from dataset_npz import Dataset
 from models.multi_stage_sequenceencoder import multistageSTARSequentialEncoder, multistageLSTMSequentialEncoder
 from models.networkConvRef import model_2DConv
@@ -376,4 +377,4 @@ if __name__ == "__main__":
     if args.wandb_enable:
         wandb.finish()
 
-    logger.add(str('./logger.log'))
+    logger.add('logger.log')

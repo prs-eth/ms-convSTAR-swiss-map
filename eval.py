@@ -130,7 +130,7 @@ def print_report(overall_accuracy, kappa, precision, recall, f1, cl_acc):
     #print('Per-class acc:', cl_acc)
     return cl_acc
 
-def print_report_info(overall_accuracy, kappa, precision, recall, f1, cl_acc):
+def print_report_(overall_accuracy, kappa, precision, recall, f1, cl_acc):
     
     report="""
     overall accuracy: \t{:.3f}
