@@ -335,6 +335,10 @@ if __name__ == "__main__":
         args.gt_path) + '_' + str(args.seed)
     print(model_name)
 
+    logger.add('logger.log')
+    logger.info(model_name)
+
+
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     if args.wandb_enable:
@@ -377,4 +381,3 @@ if __name__ == "__main__":
     if args.wandb_enable:
         wandb.finish()
 
-    logger.add('logger.log')
