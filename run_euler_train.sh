@@ -11,4 +11,4 @@
 
 
 # Evaluation
-python3 train_ensemble.py -w 1 --hidden 64 --seed 1 -exp 50501
+python3 train_ensemble.py -w 1 -b 16 --hidden 128 --seed 1 -exp 50601
