@@ -1,10 +1,10 @@
 """
 
-bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --seed 1001 -exp 1001
-bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --seed 1002 -exp 1002
-bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --seed 1003 -exp 1003
-bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --seed 1004 -exp 1004
-bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --seed 1005 -exp 1005
+bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --hidden 64 --seed 1001 -exp 1001
+bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --hidden 64 --seed 1002 -exp 1002
+bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --hidden 64 --seed 1003 -exp 1003
+bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --hidden 64 --seed 1004 -exp 1004
+bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --hidden 64 --seed 1005 -exp 1005
 
 
 """
@@ -68,7 +68,9 @@ def parse_args():
     parser.add_argument('-pred', "--prediction_dir", default='predictions', type=str,help="directory to save predictions")
     parser.add_argument('-exp', "--experiment_id", default=0, type=int, help="times of running the experiment")
     parser.add_argument('--data_canton_labels', default = "/cluster/work/igp_psr/tmehmet/S2_Raw_L2A_CH_2021_hdf5_train_canton_labels.json", type = str, help="Canton labels for each patch in gt")
-    parser.add_argument('--canton_ids_train', default = ["0", "3", "5", "14", "18", "19", "20", "25"], type=list, help="Canton ids to train")
+    parser.add_argument('--canton_ids_train', 
+    default = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"], 
+    type=list, help="Canton ids to train")
     parser.add_argument('-wdb', "--wandb_enable", default=False, type=bool, help="wandb")
     parser.add_argument('-ev', "--eval", action='store_true', help="eval mode")
     parser.add_argument('-vi', "--viz", action='store_true', help="viz mode")
