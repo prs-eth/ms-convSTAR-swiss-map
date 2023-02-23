@@ -4,7 +4,7 @@ bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemb
 bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --hidden 64 --seed 1002 -exp 1002
 bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --hidden 64 --seed 1003 -exp 1003
 bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --hidden 64 --seed 1004 -exp 1004
-bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --hidden 64 --seed 1005 -exp 1005
+bsub -W 120:00 -n 1 -R "rusage[mem=120000,ngpus_excl_p=1]"  python3 train_ensemble.py --hidden 64 --seed 1005 -exp 1005 x
 
 
 """
@@ -76,7 +76,7 @@ def parse_args():
     parser.add_argument('-vi', "--viz", action='store_true', help="viz mode")
 
     return parser.parse_args()
-
+ 
 class stepCount():
     def __init__(self, init_step=0):
         self.step = init_step
